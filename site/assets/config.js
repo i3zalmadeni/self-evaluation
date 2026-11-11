@@ -5,3 +5,6 @@ window.APP_CONFIG = {
   supabaseUrl: 'https://kbhovmnvqzgihhyibqkq.supabase.co',
   supabaseKey: 'sb_publishable_hfzNlh9tCpuC2zCf4T_2FA_42ujADOX'
 };
+
+// الدخول بمعرّف: يُترجم المعرّف داخلياً إلى بريد غير حقيقي بهذا النطاق (يطابق إعداد النواة).
+window.LOGIN_DOMAIN = 'id.invalid';

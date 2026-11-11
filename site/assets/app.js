@@ -425,10 +425,14 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-ev]'
 
 function login() {
   if (session) { sb.auth.signOut().then(() => { location.hash = '#home'; boot(); }); return; }
-  // الدخول موحّد في النواة الرقمية (بمعرّف الدخول) ثم العودة إلى هذا الموقع.
-  const u = new URL(location.origin + '/PS/login.html');
-  u.searchParams.set('next', location.origin + location.pathname);
-  location.href = u.href;
+  view.innerHTML = `<div class="panel" style="max-width:480px;margin-inline:auto">${App.loginFormHTML('تسجيل الدخول · التقويم الذاتي الذكي')}</div>`;
+  $('#lf').onsubmit = async e => {
+    e.preventDefault();
+    const { error } = await App.signIn($('#le').value, $('#lp').value);
+    if (error) { $('#lerr').textContent = error; return; }
+    location.hash = '#home'; await boot();
+    if (isTeam()) location.href = 'admin.html';
+  };
 }
 
 // ───── سجل التنقل: الرجوع إلى الصفحة التي جاء منها المستخدم، مع استعادة موضع التمرير ─────

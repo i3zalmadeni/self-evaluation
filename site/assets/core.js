@@ -175,13 +175,18 @@ async function openViewer(evidenceId, title, canDownload = true) {
   show(0);
 }
 
-// الدخول بحساب النواة الرقمية نفسه (Supabase Auth في قاعدة النواة): بريد وكلمة مرور.
-const signIn = async (email, password) => {
-  const { error } = await sb.auth.signInWithPassword({ email: String(email || '').trim().toLowerCase(), password });
-  return { error: error ? 'بيانات الدخول غير صحيحة.' : null };
+// الدخول بحساب النواة الرقمية نفسه (Supabase Auth في قاعدة النواة): معرّف دخول (أو بريد للحسابات القديمة) وكلمة مرور.
+// الجلسة تُحفظ بالمفتاح نفسه الذي تستعمله بقية الأنظمة على الأصل نفسه، فتتعرف عليها دون دخول جديد.
+const toAuthEmail = v => { v = String(v || '').trim().toLowerCase(); return v.includes('@') ? v : v + '@' + (window.LOGIN_DOMAIN || 'id.invalid'); };
+const signIn = async (id, password) => {
+  const { error } = await sb.auth.signInWithPassword({ email: toAuthEmail(id), password });
+  if (!error) return { error: null };
+  return { error: /banned/.test(error.code || '') ? 'هذا الحساب موقوف. راجع مدير النواة.' : (error.code === 'invalid_credentials' || error.status === 400) ? 'بيانات الدخول غير صحيحة.' : 'تعذر الاتصال بالخادم، حاول مرة أخرى.' };
 };
-
-window.Pages = {}; window.Act = {};
-window.App = { signIn, sb, h, raw, esc, Raw, $, $$, put, L, lab, opts, nf, dt, dtt, today, codeCmp, S, staffName, staffOpts, cycle, role, isCoord, canReview,
+const loginFormHTML = (sub, msg = '') => `<img src="assets/core-logo.svg" alt="النواة الرقمية" style="width:72px;height:72px;display:block;margin:0 auto 8px"><h2 style="text-align:center;margin:0 0 4px">النواة الرقمية</h2><p class="muted" style="text-align:center;margin:0 0 14px">${sub}</p>
+  <form class="f frm" id="lf"><label class="fld"><span>معرّف الدخول</span><input id="le" name="e" type="text" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr" placeholder="أرقام أو حروف إنجليزية"></label>
+  <label class="fld"><span>كلمة المرور</span><input id="lp" name="p" type="password" required autocomplete="current-password" dir="ltr"></label>
+  <div class="err" id="lerr" role="alert">${msg}</div><button class="btn pri" type="submit">دخول</button></form>`;
+window.App = { signIn, loginFormHTML, sb, h, raw, esc, Raw, $, $$, put, L, lab, opts, nf, dt, dtt, today, codeCmp, S, staffName, staffOpts, cycle, role, isCoord, canReview,
   toast, errMsg, run, must, modal, closeModal, ask, sure, badge, sb_: sb_, table, btn, pageHead, panel, csv, openViewer };
 })();

@@ -72,13 +72,21 @@ function drawCycles() {
 App.reloadCycles = async () => { const r = await sb.from('cycles').select('*').order('created_at', { ascending: false }); S.cycles = r.data || []; if (!S.cycles.find(c => c.id === S.cid)) S.cid = S.cycles[0]?.id || null; drawCycles(); };
 App.reloadStaff = async () => { const [r, t] = await Promise.all([sb.from('staff').select('*').order('full_name'), sb.from('team_members').select('staff_id,is_active')]); S.staff = r.data || []; S.team = new Set((t.data || []).filter(x => x.is_active).map(x => x.staff_id)); };
 
-// الدخول موحّد في النواة الرقمية (بمعرّف الدخول): نحوّل إلى صفحتها ونعود بعد الدخول.
-// الأنظمة على الأصل نفسه وقاعدة النواة نفسها، فتصلنا الجلسة تلقائياً.
+// الدخول من هذا النظام نفسه بمعرّف حساب النواة الرقمية. الجلسة مشتركة مع بقية الأنظمة على الأصل نفسه.
+const LOGIN_MSG = {
+  denied: 'حسابك معروف في النواة الرقمية لكنه غير مرتبط بنظام التقويم الذاتي. يعيّن مدير النواة المنسق، ويضيف المنسق أعضاء الفريق.',
+  nostaff: 'هذا الحساب غير مرتبط بسجل منسوب في النواة الرقمية أو غير مفعّل.',
+};
 function showLogin(code = '') {
-  const u = new URL(location.origin + '/PS/login.html');
-  u.searchParams.set('next', location.origin + location.pathname);
-  if (code) u.searchParams.set('e', code);
-  location.replace(u.href);
+  $('#shell').hidden = true; const el = $('#login'); el.hidden = false;
+  put(el, h`<div class="login"><div class="pn">${raw(App.loginFormHTML('تسجيل الدخول · لوحة التقويم الذاتي الذكي', LOGIN_MSG[code] || ''))}
+    <p class="muted" style="margin-top:12px"><a href="./">العودة إلى الموقع العام</a></p></div></div>`);
+  $('#lf').onsubmit = async e => {
+    e.preventDefault();
+    const { error } = await App.signIn($('#le').value, $('#lp').value);
+    if (error) { $('#lerr').textContent = error; return; }
+    boot();
+  };
 }
 
 /* ===== الترويسة الثابتة: اسم الصفحة وما تحويه، بنمط واحد في كل صفحات لوحة التحكم ===== */
