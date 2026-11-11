@@ -425,17 +425,10 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-ev]'
 
 function login() {
   if (session) { sb.auth.signOut().then(() => { location.hash = '#home'; boot(); }); return; }
-  view.innerHTML = `<div class="panel" style="max-width:480px;margin-inline:auto"><h2>تسجيل الدخول</h2><p class="muted">للمقيم الخارجي وأعضاء فريق التقويم.</p>
-    <form class="f" id="lf"><label>اسم المستخدم أو البريد الإلكتروني<input type="text" name="e" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr"></label>
-    <label>كلمة المرور<input type="password" name="p" required autocomplete="current-password" dir="ltr"></label>
-    <button class="btn pri" type="submit">دخول</button><div class="err" id="le" role="alert"></div></form></div>`;
-  $('#lf').onsubmit = async e => {
-    e.preventDefault(); const f = new FormData(e.target);
-    const { error } = await App.coreLogin(f.get('e'), f.get('p'));
-    if (error) { $('#le').textContent = error; return; }
-    location.hash = '#home'; await boot();
-    if (isTeam()) location.href = 'admin.html';
-  };
+  // الدخول موحّد في النواة الرقمية (بمعرّف الدخول) ثم العودة إلى هذا الموقع.
+  const u = new URL(location.origin + '/PS/login.html');
+  u.searchParams.set('next', location.origin + location.pathname);
+  location.href = u.href;
 }
 
 // ───── سجل التنقل: الرجوع إلى الصفحة التي جاء منها المستخدم، مع استعادة موضع التمرير ─────

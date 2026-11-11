@@ -49,7 +49,7 @@ async function boot() {
   const me = await loadMe(session.user.id);
   if (!me || me.denied) {
     await sb.auth.signOut();
-    return showLogin(me?.denied ? 'حسابك معروف في النواة الرقمية لكنه غير مرتبط بنظام التقويم الذاتي. يعيّن مدير النواة المنسق، ويضيف المنسق أعضاء الفريق.' : 'هذا الحساب غير مرتبط بسجل منسوب في النواة الرقمية أو غير مفعّل.');
+    return showLogin(me?.denied ? 'denied' : 'nostaff');
   }
   S.me = me;
   const [cyc, stf, tm] = await Promise.all([
@@ -72,19 +72,13 @@ function drawCycles() {
 App.reloadCycles = async () => { const r = await sb.from('cycles').select('*').order('created_at', { ascending: false }); S.cycles = r.data || []; if (!S.cycles.find(c => c.id === S.cid)) S.cid = S.cycles[0]?.id || null; drawCycles(); };
 App.reloadStaff = async () => { const [r, t] = await Promise.all([sb.from('staff').select('*').order('full_name'), sb.from('team_members').select('staff_id,is_active')]); S.staff = r.data || []; S.team = new Set((t.data || []).filter(x => x.is_active).map(x => x.staff_id)); };
 
-function showLogin(msg = '') {
-  $('#shell').hidden = true; const el = $('#login'); el.hidden = false;
-  put(el, h`<div class="login"><div class="pn"><h1 style="font-size:1.3rem;margin-bottom:6px">لوحة التقويم الذاتي</h1><p class="muted">مدرسة لبيد بن ربيعة المتوسطة. الدخول بحساب النواة الرقمية نفسه.</p>
-    <form class="frm" id="lf"><label class="fld"><span>البريد الإلكتروني</span><input id="le" type="email" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr"></label>
-    <label class="fld"><span>كلمة المرور</span><input id="lp" type="password" required autocomplete="current-password" dir="ltr"></label>
-    <div class="err" id="lerr" role="alert">${msg}</div><button class="btn pri" type="submit">دخول</button></form>
-    <p class="muted" style="margin-top:12px"><a href="./">العودة إلى الموقع العام</a></p></div></div>`);
-  $('#lf').onsubmit = async e => {
-    e.preventDefault();
-    const { error } = await App.signIn($('#le').value, $('#lp').value);
-    if (error) { $('#lerr').textContent = error; return; }
-    boot();
-  };
+// الدخول موحّد في النواة الرقمية (بمعرّف الدخول): نحوّل إلى صفحتها ونعود بعد الدخول.
+// الأنظمة على الأصل نفسه وقاعدة النواة نفسها، فتصلنا الجلسة تلقائياً.
+function showLogin(code = '') {
+  const u = new URL(location.origin + '/PS/login.html');
+  u.searchParams.set('next', location.origin + location.pathname);
+  if (code) u.searchParams.set('e', code);
+  location.replace(u.href);
 }
 
 /* ===== الترويسة الثابتة: اسم الصفحة وما تحويه، بنمط واحد في كل صفحات لوحة التحكم ===== */
@@ -184,7 +178,7 @@ document.addEventListener('click', async e => {
 $('#cycSel').onchange = e => { S.cid = e.target.value || null; try { localStorage.setItem('cyc', S.cid || ''); } catch {} route(); };
 $('#out').onclick = async () => { await sb.auth.signOut(); S.me = null; showLogin(); };
 // انتهاء الجلسة من جهة الخادم (أو تسجيل الخروج من تبويب آخر): نرجع إلى شاشة الدخول برسالة واضحة بدل أخطاء صامتة
-sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT' && S.me) { S.me = null; showLogin('انتهت الجلسة، سجّل الدخول من جديد.'); } });
+sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT' && S.me) { S.me = null; showLogin(); } });
 window.addEventListener('offline', () => toast('لا يوجد اتصال بالإنترنت: لن تُحفظ التعديلات حتى يعود', true));
 window.addEventListener('online', () => { toast('عاد الاتصال'); App.refresh?.(); });
 window.addEventListener('hashchange', () => route());
