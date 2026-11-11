@@ -424,7 +424,7 @@ async function evidenceBlock(cid, iid) {
 document.addEventListener('click', e => { const b = e.target.closest('[data-ev]'); if (b) App.openViewer(b.dataset.ev, b.dataset.t, true); });
 
 function login() {
-  if (session) { sb.auth.signOut().then(() => { location.hash = '#home'; boot(); }); return; }
+  if (session) { sb.auth.signOut().then(() => { location.href = './'; }); return; }
   view.innerHTML = `<div class="panel" style="max-width:480px;margin-inline:auto">${App.loginFormHTML('تسجيل الدخول · التقويم الذاتي الذكي')}</div>`;
   $('#lf').onsubmit = async e => {
     e.preventDefault();

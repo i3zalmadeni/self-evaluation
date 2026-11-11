@@ -9,6 +9,6 @@
     const p = await sb.myRole();
     if (adm && p && ['coordinator', 'team_member', 'principal'].includes(p.role)) adm.hidden = false;
     login.textContent = 'خروج'; login.setAttribute('href', '#');
-    login.addEventListener('click', async e => { e.preventDefault(); await sb.auth.signOut(); location.reload(); });
+    login.addEventListener('click', async e => { e.preventDefault(); await sb.auth.signOut(); location.href = './'; });
   } catch (e) { /* تبقى القائمة بحالتها الافتراضية */ }
 })();

@@ -184,7 +184,7 @@ document.addEventListener('click', async e => {
   finally { el.disabled = false; }
 });
 $('#cycSel').onchange = e => { S.cid = e.target.value || null; try { localStorage.setItem('cyc', S.cid || ''); } catch {} route(); };
-$('#out').onclick = async () => { await sb.auth.signOut(); S.me = null; showLogin(); };
+$('#out').onclick = async () => { S.me = null; await sb.auth.signOut(); location.href = './'; };   // الخروج يعيد إلى الصفحة الرئيسية للنظام
 // انتهاء الجلسة من جهة الخادم (أو تسجيل الخروج من تبويب آخر): نرجع إلى شاشة الدخول برسالة واضحة بدل أخطاء صامتة
 sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT' && S.me) { S.me = null; showLogin(); } });
 window.addEventListener('offline', () => toast('لا يوجد اتصال بالإنترنت: لن تُحفظ التعديلات حتى يعود', true));
