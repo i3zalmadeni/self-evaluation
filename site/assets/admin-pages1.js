@@ -154,4 +154,20 @@ Act.asLink = async ({ iid, sid }) => {
   const url = new URL('access.html#' + data, location.href.replace(/admin\.html.*$/, '')).href;
   App.modal('رابط وصول المسؤول', h`<p>رابط للاطلاع على تفاصيل المؤشر دون حساب (قراءة فقط، صالح 30 يوماً):</p><input readonly value="${url}" dir="ltr" style="width:100%;padding:8px" onclick="this.select()"><p class="muted">لا يُحفظ الرابط في النظام؛ انسخه الآن. إنشاء رابط جديد يُبقي القديم صالحاً حتى انتهائه.</p>`);
 };
+
+// ===== الأنظمة المرتبطة بالنواة =====
+// الصلاحيات تُمنح من النواة وحدها، ولا تُمنح إلا لأنظمة مفعّلة. هنا عرض للقراءة.
+const SYS_ST = { connected: ['مفعّل', 'ok'], planned: ['مخطط (غير مفعّل)', 'mute'], suspended: ['موقوف', 'warn'] };
+const LV = { view: 'اطلاع', add: 'إضافة', edit: 'تعديل', approve: 'اعتماد' };
+const SCOPE = { 'school:read': 'بيانات المدرسة', 'staff:read': 'سجل المنسوبين', 'students:read': 'سجل المتعلمين', 'facilities:read': 'المرافق', 'identity:verify': 'التحقق من الهوية', 'changes:read': 'متابعة التغييرات' };
+Pages.systems = async () => {
+  const [sys, mine] = await Promise.all([must(sb.raw.rpc('linked_systems')), sb.raw.from('staff_permissions').select('permission_code').eq('staff_id', S.me.staff_id)]);
+  const mp = new Set((mine.data || []).map(x => x.permission_code)), act = sys.filter(x => x.status === 'connected');
+  return h`${pageHead('الأنظمة المرتبطة بالنواة')}
+  ${App.tlSum([[sys.length, 'نظام مسجّل'], [act.length, 'نظام مفعّل', 'ok'], [sys.length - act.length, 'غير مفعّل', 'warn']])}
+  ${App.tlist(sys.map(x => { const [t, tone] = SYS_ST[x.status] || [x.status, 'mute'], me = x.levels.filter(l => mp.has(x.code + ':' + l));
+    return App.tile({ tone, ico: 'layers', title: x.name_ar, meta: h`${badge(t, tone === 'mute' ? undefined : tone)}${x.code === 'self_evaluation' ? badge('هذا النظام', 'info') : ''}${x.status === 'connected' ? h`<span>مستويات الصلاحية: ${x.levels.map(l => LV[l] || l).join('، ')}</span>` : h`<span class="muted">لا تُمنح صلاحياته قبل التفعيل</span>`}${me.length ? h`<span>صلاحياتك: ${me.map(l => LV[l]).join('، ')}</span>` : ''}`,
+      extra: h`<small class="muted">يقرأ من النواة: ${(x.scopes || []).map(c => SCOPE[c] || c).join(' · ')}</small>` }); }), 'لا أنظمة مسجّلة.')}
+  <p class="muted">تُسجَّل الأنظمة وتُفعَّل وتُمنح صلاحياتها من النواة الرقمية فقط (مدير النواة). قائمة الصلاحيات القابلة للمنح تشمل الأنظمة المفعّلة وحدها، ويرفض النظام منح صلاحية نظام غير مفعّل. كل نظام يقرأ من النواة ما تتيحه نطاقاته أعلاه ولا يكتب في سجلاتها.</p>`;
+};
 })();
