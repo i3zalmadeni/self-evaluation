@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex">
+<title>تفاصيل المؤشر | لبيد بن ربيعة</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap"></noscript>
+<link rel="stylesheet" href="assets/theme.css?v=20261112i">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://ujxzqduhzmrwvatycfye.supabase.co" crossorigin>
+</head>
+<body class="pub">
+<header><div class="wrap top">
+  <a class="bm" href="./"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22b3b8"/><stop offset="1" stop-color="#0d3b66"/></linearGradient></defs><path d="M30 4c2 14 8 20 24 24-16 4-22 10-24 26-2-16-8-22-24-26 16-4 22-10 24-24z" fill="url(#g)"/><path d="M50 4c.8 5 3 7.2 8 8-5 .8-7.2 3-8 8-.8-5-3-7.2-8-8 5-.8 7.2-3 8-8z" fill="#f0b34a"/></svg><span><b>التقويم الذاتي الذكي</b><small>مدرسة لبيد بن ربيعة المتوسطة</small></span></a>
+  <nav aria-label="روابط الموقع" style="flex:1"></nav>
+  <span class="moe"><b>وزارة التعليم</b><small>Ministry of Education</small></span>
+</div></header>
+
+<main class="wrap" style="max-width:760px;padding-block:5vh"><div id="box"><p class="muted">جارٍ التحميل…</p></div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="assets/config.js?v=20261111v"></script>
+<script>
+(async () => {
+  const sb = supabase.createClient(APP_CONFIG.supabaseUrl, APP_CONFIG.supabaseKey), box = document.getElementById('box');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const ST = { new: 'جديد', under_review: 'قيد المراجعة', approved: 'معتمد', needs_completion: 'يحتاج استكمالاً', rejected: 'مرفوض' };
+  const dt = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { dateStyle: 'long' }) : 'يحدده المنسق';
+  const { data: d } = await sb.rpc('get_access_link_data', { p_token: location.hash.slice(1) });
+  if (!d) { box.innerHTML = '<div class="panel"><h2>الرابط غير صالح أو انتهت صلاحيته</h2><p class="muted">تواصل مع منسق التقويم الذاتي للحصول على رابط جديد.</p></div>'; return; }
+  box.innerHTML = `<div class="panel"><p class="muted">${esc(d.cycle_name)} · أُسند إلى: ${esc(d.staff_name)}</p>
+    <h1 style="font-size:1.4rem;margin:4px 0 10px"><code style="direction:ltr;display:inline-block;background:var(--brandsoft);color:var(--brand2);padding:2px 10px;border-radius:8px">${esc(d.code)}</code></h1>
+    <p style="font-size:1.1rem">${esc(d.official_text)}</p><p class="muted">${esc(d.domain)} ‹ ${esc(d.standard)}</p>
+    <p><b>الموعد النهائي لتوفير الشواهد:</b> ${esc(dt(d.due_date))}</p></div>
+    ${d.requirements ? `<div class="panel"><h2>المطلوب</h2><p style="white-space:pre-wrap">${esc(d.requirements)}</p></div>` : ''}
+    <div class="panel"><h2>الشواهد الاسترشادية</h2>${d.suggested.length ? `<ul>${d.suggested.map(s => `<li><b>${esc(s.title)}</b>${s.description ? ' — ' + esc(s.description) : ''}</li>`).join('')}</ul>` : '<p class="muted">لا توجد شواهد استرشادية.</p>'}</div>
+    <div class="panel"><h2>ما رُفع حتى الآن</h2>${d.evidence.length ? `<ul>${d.evidence.map(e => `<li>${esc(e.title)} — ${ST[e.status]}</li>`).join('')}</ul>` : '<p class="muted">لم يُرفع شاهد بعد.</p>'}
+    <p class="muted">سلّم الشواهد إلى مقيّم المؤشر أو منسق التقويم ليرفعها. هذه الصفحة للاطلاع فقط ولا تمنح صلاحية دخول إلى النظام.</p></div>
+    <p class="muted">الرابط صالح حتى ${esc(new Date(d.expires_at).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { dateStyle: 'long' }))}.</p>`;
+})();
+</script>
+</body>
+</html>
