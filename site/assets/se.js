@@ -11,7 +11,7 @@ const bar = (p) => `<div class="pbar" style="background:#e3eef0;border-radius:99
 
 // تسميات الحالات (القيم غير المعروفة تُعرض كما هي)
 const LS = {
-  cycle: { draft: "مسودة", active: "نشطة", closed: "مغلقة", archived: "مؤرشفة" },
+  cycle: { draft: "مسودة", active: "نشطة", paused: "متوقفة مؤقتاً", closed: "مغلقة" },
   eval: { draft: "مسودة", submitted: "مقدَّم", approved: "معتمد" },
 };
 const lbl = (map, k) => map[k] || k || "—";
@@ -65,3 +65,11 @@ async function pickCycle() {
   return { list, cur: list.find((x) => x.id === id) || list.find((x) => x.status === "active") || list[0] || null };
 }
 const cycleSwitch = (list, cur) => list.length > 1 ? `<div class="acts"><select onchange="location.search='?cycle='+this.value" aria-label="الدورة" style="width:auto">${list.map((x) => `<option value="${esc(x.id)}" ${cur && x.id === cur.id ? "selected" : ""}>${esc(x.name)}</option>`).join("")}</select></div>` : "";
+
+function modal(html, wide) {
+  const ov = document.createElement("div"); ov.className = "ov"; ov.innerHTML = `<div class="md" role="dialog" aria-modal="true" ${wide ? 'style="max-width:860px"' : ""}>${html}</div>`;
+  const close = () => ov.remove(); ov.addEventListener("mousedown", (e) => { if (e.target === ov) close(); });
+  document.body.appendChild(ov); return { el: ov.firstChild, close };
+}
+const nn = (v) => (v === "" || v === undefined || v === null ? null : typeof v === "string" ? v.trim() || null : v);
+const opts = (obj, sel) => Object.entries(obj).map(([k, v]) => `<option value="${esc(k)}" ${k === sel ? "selected" : ""}>${esc(v)}</option>`).join("");

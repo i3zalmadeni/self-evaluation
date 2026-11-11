@@ -1,7 +1,7 @@
 # الربط بالنواة
 
 ## ما هو مسجَّل في النواة لهذا النظام
-- النظام `self_evaluation` في جدول `systems` (الحالة الحالية `planned`، النطاقات: school:read, staff:read, identity:verify, changes:read).
+- النظام `self_evaluation` في جدول `systems` (الحالة `connected`، النطاقات: school:read, staff:read, identity:verify, changes:read).
 - صلاحيات `self_evaluation:view | add | edit | approve` في `permissions`.
 - الدور التنظيمي `coordinator` بنطاق `self_evaluation` في `staff_roles`.
 

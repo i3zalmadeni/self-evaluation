@@ -11,7 +11,7 @@
 | `se_standards` | id, domain_id, code, name_ar, sort_order |
 | `se_indicators` | id, standard_id, code, official_text, requirements_text, sort_order, private_schools_only |
 | `se_levels` | id, guide_id, code, label_ar, sort_order, min_percent, max_percent |
-| `se_cycles` | id, name, school_year, starts_on, ends_on, status, guide_id, coordinator_id, published, created_by, created_at, updated_at, include_private_only |
+| `se_cycles` | id, name, school_year, starts_on, ends_on, status, guide_id, coordinator_id, year_id, published, created_by, created_at, updated_at, include_private_only |
 | `se_team_members` | id, staff_id, is_active, added_by, created_at, updated_at |
 | `se_external_evaluators` | id, user_id, full_name, organization, is_active, expires_on, created_by, created_at, updated_at |
 | `se_domain_assignments` | id, cycle_id, domain_id, staff_id, role_kind, created_at |
