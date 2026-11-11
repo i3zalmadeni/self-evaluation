@@ -179,7 +179,25 @@ async function openViewer(evidenceId, title, canDownload = true) {
 const LOGIN_DOMAIN = 'labeed.local';
 const loginEmail = id => { const v = String(id || '').trim().toLowerCase(); return v.includes('@') ? v : v + '@' + LOGIN_DOMAIN; };
 
+// الدخول بحساب النواة الرقمية (دالة core-login). المقيّم الخارجي وحده يبقى بحساب محلي.
+const coreLogin = async (id, password) => {
+  const email = String(id || '').trim().toLowerCase();
+  const { data, error } = await sb.functions.invoke('core-login', { body: { email, password } });
+  if (!error && data?.access_token) {
+    const { error: e2 } = await sb.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token });
+    return { error: e2 ? 'تعذّر إنشاء الجلسة' : null };
+  }
+  let msg = data?.error || null; try { if (!msg) msg = (await error.context.json())?.error; } catch {}
+  const { data: ld, error: le } = await sb.auth.signInWithPassword({ email: loginEmail(email), password });
+  if (!le && ld?.user) {
+    const { data: pr } = await sb.from('profiles').select('role').eq('id', ld.user.id).maybeSingle();
+    if (pr?.role === 'external_evaluator') return { error: null };
+    await sb.auth.signOut();
+  }
+  return { error: msg || 'بيانات الدخول غير صحيحة.' };
+};
+
 window.Pages = {}; window.Act = {};
-window.App = { loginEmail, sb, h, raw, esc, Raw, $, $$, put, L, lab, opts, nf, dt, dtt, today, codeCmp, S, staffName, staffOpts, cycle, role, isCoord, canReview,
+window.App = { coreLogin, loginEmail, sb, h, raw, esc, Raw, $, $$, put, L, lab, opts, nf, dt, dtt, today, codeCmp, S, staffName, staffOpts, cycle, role, isCoord, canReview,
   toast, errMsg, run, must, modal, closeModal, ask, sure, badge, sb_: sb_, table, btn, pageHead, panel, csv, openViewer };
 })();

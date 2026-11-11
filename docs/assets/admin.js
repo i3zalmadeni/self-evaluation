@@ -71,8 +71,8 @@ function showLogin(msg = '') {
     <p class="muted" style="margin-top:12px"><a href="./">العودة إلى الموقع العام</a></p></div></div>`);
   $('#lf').onsubmit = async e => {
     e.preventDefault();
-    const { error } = await sb.auth.signInWithPassword({ email: App.loginEmail($('#le').value), password: $('#lp').value });
-    if (error) { $('#lerr').textContent = 'بيانات الدخول غير صحيحة.'; return; }
+    const { error } = await App.coreLogin($('#le').value, $('#lp').value);
+    if (error) { $('#lerr').textContent = error; return; }
     boot();
   };
 }
