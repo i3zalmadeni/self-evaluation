@@ -187,6 +187,7 @@ const loginFormHTML = (sub, msg = '') => `<img src="assets/core-logo.svg" alt="�
   <form class="f frm" id="lf"><label class="fld"><span>معرّف الدخول</span><input id="le" name="e" type="text" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr" placeholder="أرقام أو حروف إنجليزية"></label>
   <label class="fld"><span>كلمة المرور</span><input id="lp" name="p" type="password" required autocomplete="current-password" dir="ltr"></label>
   <div class="err" id="lerr" role="alert">${msg}</div><button class="btn pri" type="submit">دخول</button></form>`;
+window.Pages = {}; window.Act = {};
 window.App = { signIn, loginFormHTML, sb, h, raw, esc, Raw, $, $$, put, L, lab, opts, nf, dt, dtt, today, codeCmp, S, staffName, staffOpts, cycle, role, isCoord, canReview,
   toast, errMsg, run, must, modal, closeModal, ask, sure, badge, sb_: sb_, table, btn, pageHead, panel, csv, openViewer };
 })();
