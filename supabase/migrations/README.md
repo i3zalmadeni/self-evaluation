@@ -13,3 +13,4 @@
 - se_0007 — evidence_date، دالة se_public_owners، سياسة قراءة سجل النشاط للمنسق.
 - se_0008 — due_date لإسنادات المؤشرات، وعرض se_public_evidence_stubs (عدد الشواهد المعتمدة المنشورة فقط).
 - se_0009 — (مستوى النواة) عرض grantable_permissions، ومنع منح صلاحية نظام غير مفعّل، ودالة linked_systems.
+- se_0010 — (مستوى النواة) مناصب المنسقين الثلاثة، ومنسق نشط واحد لكل نطاق، وعرض coordinator_positions.
