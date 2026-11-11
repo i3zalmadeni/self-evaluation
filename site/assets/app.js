@@ -44,8 +44,9 @@ async function load() {
   session = sess.data.session;
   role = null;
   if (session) { role = await sb.myRole(); }
-  $('#loginLink').textContent = session ? 'خروج' : 'دخول';
-  $('#adminLink').hidden = !(role && ['coordinator','team_member','principal'].includes(role.role));
+  const ll = $('#loginLink'); if (ll) ll.hidden = !session;
+  const al = $('#adminLink');
+  if (al) al.setAttribute('href', (role && ['coordinator','team_member','principal'].includes(role.role)) ? 'admin.html' : '#login');
   const lv = lvRes && lvRes.data;
   if (lv && lv.length) THR = lv.filter(x => x.min_pct != null).map(x => [x.code, +x.min_pct]).sort((a, b) => b[1] - a[1]);
   await loadOwners();

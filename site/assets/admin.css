@@ -782,3 +782,16 @@ button.kc{font:inherit;text-align:start;cursor:pointer;width:100%} .kc.on{outlin
 .tm-due{display:inline-flex;align-items:center;gap:4px;font-size:.76rem;padding:2px 9px;border-radius:99px;background:var(--soft);color:var(--ink2);white-space:nowrap}
 .tm-due svg{width:12px;height:12px}.tm-due.warn{background:color-mix(in srgb,var(--c3f) 14%,var(--surface));color:color-mix(in srgb,var(--c3f) 70%,var(--ink))}.tm-due.bad{background:color-mix(in srgb,var(--c5f) 14%,var(--surface));color:color-mix(in srgb,var(--c5f) 75%,var(--ink))}
 .tm-ty{font-style:normal;font-size:.72rem;color:var(--muted);justify-self:start}
+
+/* ═════ الترويسة الموحدة (مطابقة للنواة الرقمية) ═════ */
+.adm .idl{display:flex;align-items:center;gap:12px;margin-inline-start:auto}
+.adm .sitelink{color:var(--ink2);font-weight:700;text-decoration:none;padding:8px 12px;border-radius:10px;white-space:nowrap}
+.adm .sitelink:hover{background:color-mix(in srgb,var(--brand) 8%,transparent);color:var(--brand2)}
+.adm .vsep{width:1px;height:26px;background:var(--line)}
+.adm .coreid{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);line-height:1.2}
+.adm .coreid img{width:30px;height:30px} .adm .coreid b{display:block;font-size:.88rem} .adm .coreid small{display:block;font-size:.62rem;color:var(--muted)}
+#subbar .who{margin-inline-start:auto;display:flex;align-items:center;gap:10px;color:#d3e8ec}
+#subbar #who{display:inline-flex!important;font-size:.85rem;color:#e6f3f5}
+#subbar .outd{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:10px;padding:6px 14px;font:inherit;font-weight:600;cursor:pointer}
+#subbar .outd:hover{background:rgba(255,255,255,.2)}
+@media (max-width:760px){.adm .coreid,.adm .vsep{display:none}.adm .idl{gap:6px}#subbar .who{flex:1 1 100%;justify-content:space-between}}

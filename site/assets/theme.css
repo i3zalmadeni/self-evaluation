@@ -241,7 +241,12 @@ body.pub nav a .ico{width:17px;height:17px}
 body.pub nav a:hover{background:color-mix(in srgb,var(--brand) 8%,transparent)}
 body.pub nav a.navbtn{background:var(--grad);color:#fff;margin-inline-start:6px;box-shadow:0 4px 12px rgba(12,111,130,.3)}
 body.pub nav a.navbtn:hover{filter:brightness(1.08)} body.pub nav a.navbtn.on::after{display:none}
-body.pub #adminLink{color:var(--goldink);background:var(--acc2soft)}
+body.pub #adminLink{color:inherit;background:none}
+.coreid{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);line-height:1.2;padding-inline-end:10px}
+.coreid img{width:30px;height:30px} .coreid b{display:block;font-size:.88rem} .coreid small{display:block;font-size:.62rem;color:var(--muted)}
+.outbtn{padding:7px 14px;border-radius:10px;border:1px solid var(--line);color:var(--ink2);text-decoration:none;font-weight:600;font-size:.88rem;white-space:nowrap}
+.outbtn[hidden]{display:none}
+@media (max-width:760px){body.pub .coreid{display:none}}
 .navtoggle{display:none;place-items:center;flex:none;width:44px;height:44px;padding:0;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
 .navtoggle .ico{width:24px;height:24px}
 .navtoggle .x{display:none} header.open .navtoggle .x{display:block} header.open .navtoggle .b{display:none}
