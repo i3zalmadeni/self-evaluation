@@ -29,7 +29,8 @@ const bar = p => h`<div class="bar2"><span style="width:${p}%"></span></div>`;
 // ===== الدورات =====
 // الدورة تتبع عاماً دراسياً من النواة (year_id) وتثبّت إصدار الدليل
 const yearLabel = y => y.name;
-const schoolYearOf = y => { const m = y?.name?.match(/(\d{4})\/(\d{4})/); return m ? `${m[1]}-${m[2]}` : null; };
+// school_year عمود إلزامي: يُستخرج من الاسم «1448/1449»، وإلا يُؤخذ اسم العام كما هو («1448»)
+const schoolYearOf = y => { const m = y?.name?.match(/(\d{4})\s*[\/\-]\s*(\d{4})/); return m ? `${m[1]}-${m[2]}` : (y?.name || '').trim() || null; };
 const cycleFields = (gv, yrs) => [
   { k: 'name', l: 'اسم الدورة', req: 1, ph: 'الدورة الأولى' },
   { k: 'year_id', l: 'العام الدراسي (من النواة)', t: 'select', req: 1, o: yrs.map(y => [y.id, yearLabel(y)]) },
@@ -53,7 +54,8 @@ Act.cycNew = async () => {
   const [gv, yrs] = await Promise.all([must(sb.from('guide_versions').select('*')), loadYears()]);
   const cur = gv.find(g => g.is_current) || gv[0], yc = yrs.find(y => y.status === 'current') || yrs[0];
   const v = await ask('دورة تقويم جديدة', cycleFields(gv, yrs), { guide_version_id: cur?.id, year_id: yc?.id, coordinator_id: S.me.staff_id });
-  if (!v) return; if (await run(sb.from('cycles').insert({ ...withYear(v, yrs), status: 'draft', created_by: S.me.id }), 'أُنشئت الدورة')) { await App.reloadCycles(); App.refresh(); }
+  if (!v) return; if (!yrs.find(y => y.id === v.year_id)) return toast('اختر العام الدراسي أولاً');
+  if (await run(sb.from('cycles').insert({ ...withYear(v, yrs), status: 'draft', created_by: S.me.id }), 'أُنشئت الدورة')) { await App.reloadCycles(); App.refresh(); }
 };
 Act.cycEdit = async ({ id }) => {
   const yrs = await loadYears(); const c = S.cycles.find(x => x.id === id); const v = await ask('تعديل الدورة', cycleFields(null, yrs), c); if (!v) return;
