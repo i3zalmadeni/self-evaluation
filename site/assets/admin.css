@@ -795,3 +795,30 @@ button.kc{font:inherit;text-align:start;cursor:pointer;width:100%} .kc.on{outlin
 #subbar .outd{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.28);border-radius:10px;padding:6px 14px;font:inherit;font-weight:600;cursor:pointer}
 #subbar .outd:hover{background:rgba(255,255,255,.2)}
 @media (max-width:760px){.adm .coreid,.adm .vsep{display:none}.adm .idl{gap:6px}#subbar .who{flex:1 1 100%;justify-content:space-between}}
+
+/* ═════ الجوال والآيباد (حتى 900px): قائمة اللوحة في صف واحد، والدورة والخروج في صف واحد ═════ */
+@media (max-width:900px){
+  #menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(52px,1fr));gap:4px;width:100%;flex:1 1 100%;overflow:visible;flex-wrap:nowrap}
+  #menu>a{flex-direction:column;gap:2px;padding:8px 2px 6px;font-size:.7rem;min-height:54px;white-space:normal;text-align:center;justify-content:center;line-height:1.25}
+  #menu>a .ico{width:20px;height:20px}
+  #menu>a .nb{position:absolute;top:1px;inset-inline-end:2px;min-width:18px;height:18px;font-size:.68rem;padding:0 4px}
+  .sb{flex-wrap:wrap;gap:8px}
+  .sb .cyc{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:8px}
+  .sb .cyc select{flex:1;min-width:0;font-size:16px;min-height:44px}
+  #subbar .who{margin-inline-start:0;flex:none;flex-basis:auto!important}
+  #subbar #who{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #subbar .outd{min-height:44px;padding-inline:16px}
+  .tt a{min-height:44px;display:inline-flex;align-items:center}
+}
+@media (max-width:420px){#subbar #who{display:none!important}}
+/* آيباد وجوال كبير: تسميات القائمة أوضح حين تتسع الخانات */
+@media (min-width:521px) and (max-width:900px){#menu>a{font-size:.85rem;min-height:60px}#menu>a .ico{width:22px;height:22px}}
+/* شاشات ضيقة جدًا (320px): الترويسة في صف واحد والعنوان يُقتطع بنقاط */
+@media (max-width:420px){
+  .adm header .top{flex-wrap:nowrap;gap:8px}
+  .adm .bm{flex:1 1 0;min-width:0}
+  .adm .bm b,.adm .bm small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .adm .idl{flex:none;margin-inline-start:0}
+}
+/* آيباد أفقي (901–1100): قائمة اللوحة في صف واحد */
+@media (min-width:901px) and (max-width:1100px){#menu>a{padding:10px 12px;font-size:.95rem}}

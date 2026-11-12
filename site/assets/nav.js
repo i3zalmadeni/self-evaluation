@@ -9,5 +9,5 @@
   document.addEventListener('click', e => { if (!hd.contains(e.target)) set(false); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') set(false); });
   window.addEventListener('hashchange', () => set(false));
-  matchMedia('(min-width:761px)').addEventListener('change', () => set(false));
+  matchMedia('(min-width:1101px)').addEventListener('change', () => set(false));
 })();
