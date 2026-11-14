@@ -23,7 +23,7 @@
 
   /* محور الفئات */
   const hub = `<div class="ax-hub ax-rv" data-rv="zoom"><svg viewBox="0 0 400 400" aria-hidden="true">${D.who.map((w, k) => { const a = (-90 + k * 72) * Math.PI / 180; return `<line x1="200" y1="200" x2="${(200 + 150 * Math.cos(a)).toFixed(1)}" y2="${(200 + 150 * Math.sin(a)).toFixed(1)}" class="ax-spoke" style="--d:${k * .12}s"/>`; }).join('')}<circle cx="200" cy="200" r="150" class="ax-orb"/><circle cx="200" cy="200" r="98" class="ax-orb o2"/></svg>
-    <div class="ax-hub-c">${ic('star')}<b>التقويم الذاتي</b></div>
+    <div class="ax-hub-c">${ic('star')}<b>التقويم المدرسي الذكي</b></div>
     ${D.who.map((w, k) => { const a = (-90 + k * 72) * Math.PI / 180; return `<div class="ax-hn" ${btn(`data-dt="who:${k}" aria-label="تفاصيل: ${w.t}"`)} style="left:${(50 + 37.5 * Math.cos(a)).toFixed(2)}%;top:${(50 + 37.5 * Math.sin(a)).toFixed(2)}%;--d:${.2 + k * .12}s"><i>${ic(w.i)}</i><b>${w.t}</b><small>${w.d}</small></div>`; }).join('')}</div>`;
 
   const toc = [['what', 'التعريف'], ['num', 'الدليل'], ['why', 'سبب النشأة'], ['vision', 'الرؤية'], ['flow', 'دورة العمل'], ['feats', 'المزايا'], ['who', 'الفئات'], ['ba', 'قبل وبعد'], ['just', 'المبررات'], ['tech', 'البنية'], ['faq', 'أسئلة']];
@@ -146,7 +146,7 @@
   const toast = m => { const d = document.createElement('div'); d.className = 'ab-toast'; d.textContent = m; document.body.append(d); setTimeout(() => d.remove(), 3200); };
   const sb = v.querySelector('[data-ab="share"]');
   sb.onclick = async () => {
-    const url = location.href.split('#')[0], d = { title: 'التقويم الذاتي الذكي | متوسطة لبيد بن ربيعة', text: 'تعرّف على نظام التقويم الذاتي الذكي في مدرسة لبيد بن ربيعة المتوسطة', url };
+    const url = location.href.split('#')[0], d = { title: 'التقويم المدرسي الذكي | متوسطة لبيد بن ربيعة', text: 'تعرّف على نظام التقويم المدرسي الذكي في مدرسة لبيد بن ربيعة المتوسطة', url };
     try { if (navigator.share) { await navigator.share(d); return; } await navigator.clipboard.writeText(url); toast('نُسخ رابط الصفحة'); }
     catch (e) { if (e && e.name === 'AbortError') return; prompt('انسخ رابط الصفحة:', url); }
   };

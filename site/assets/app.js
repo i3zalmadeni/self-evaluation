@@ -260,8 +260,8 @@ function home() {
   const cnt = k => new Set(rs.map(r => r[k])).size;
   if (!showOwners()) { hm.f.eval = []; hm.f.resp = []; if (hm.group === 'resp' || hm.group === 'eval') hm.group = 'none'; }
   const pp = pctOf(pub, rs.length);
-  view.innerHTML = `<section class="hero3"><div class="h3-txt"><span class="chip">${ic('cal')} ${first ? esc(first[1]) : 'التقويم الذاتي المدرسي'}</span>
-    <h1><span class="gold">التقويم الذاتي</span> الذكي</h1>
+  view.innerHTML = `<section class="hero3"><div class="h3-txt"><span class="chip">${ic('cal')} ${first ? esc(first[1]) : 'التقويم المدرسي الذكي'}</span>
+    <h1><span class="gold">التقويم المدرسي</span> الذكي</h1>
     <h2 class="h3-sub">مدرسة لبيد بن ربيعة المتوسطة</h2>
     <p class="h3-p">بوابة شفافة تعرض مجالات التقويم الذاتي ومعاييره ومؤشراته ونتائجه المعتمدة، وفق دليل هيئة تقويم التعليم والتدريب.</p>
     <div class="pills"><span class="pill">${ic('check')} نتائج معتمدة</span><span class="pill">${ic('doc')} شواهد موثّقة</span><span class="pill">${ic('shield')} خصوصية محمية</span></div>
@@ -426,7 +426,7 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-ev]'
 
 function login() {
   if (session) { sb.auth.signOut().then(() => { location.href = './'; }); return; }
-  view.innerHTML = `<div class="panel" style="max-width:480px;margin-inline:auto">${App.loginFormHTML('تسجيل الدخول · التقويم الذاتي الذكي')}</div>`;
+  view.innerHTML = `<div class="panel" style="max-width:480px;margin-inline:auto">${App.loginFormHTML('تسجيل الدخول · التقويم المدرسي الذكي')}</div>`;
   $('#lf').onsubmit = async e => {
     e.preventDefault();
     const { error } = await App.signIn($('#le').value, $('#lp').value);

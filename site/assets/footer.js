@@ -23,7 +23,7 @@
   const html = `<footer class="credit lab-foot"><div class="wrap lf">
     <div class="lf-id">
       <span class="moe"><b>وزارة التعليم</b><small>Ministry of Education</small></span>
-      <div class="mid"><b>مدرسة لبيد بن ربيعة المتوسطة</b><span>مدير المدرسة: خالد بن عبدالرحمن الباش</span><span>التقويم الذاتي الذكي – 1448هـ</span></div>
+      <div class="mid"><b>مدرسة لبيد بن ربيعة المتوسطة</b><span>مدير المدرسة: خالد بن عبدالرحمن الباش</span><span>التقويم المدرسي الذكي – 1448هـ</span></div>
     </div>
     <div class="lf-card">
       <div class="lf-brand">${logo}<div><small>أحد منتجات</small><b>مختبر الأفكار – عبدالعزيز المديني <i class="lf-ai">AI</i></b></div></div>

@@ -47,9 +47,10 @@ async function boot() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return showLogin();
   const me = await loadMe(session.user.id);
-  if (!me || me.denied) {
+  if (me?.denied) return showDenied(me);   // منسوب بحساب صحيح لكنه ليس في فريق التقويم: تبقى جلسته (مشتركة مع بقية الأنظمة) وتظهر له صفحة توضيحية
+  if (!me) {
     await sb.auth.signOut();
-    return showLogin(me?.denied ? 'denied' : 'nostaff');
+    return showLogin('nostaff');
   }
   S.me = me;
   const [cyc, stf, tm] = await Promise.all([
@@ -66,6 +67,22 @@ async function boot() {
   route();
   App.alerts().then(drawMenu).catch(() => {});
 }
+// صفحة من ليس عضواً في فريق التقويم: لوحة بلا قائمة ولا دورات، ورسالة واضحة بدل إخراجه من حسابه
+function showDenied(me) {
+  S.me = null; S.denied = true;
+  $('#login').hidden = true; $('#shell').hidden = false;
+  put($('#menu'), h``); const cl = $('#cycSel')?.closest('.cyc'); if (cl) cl.style.display = 'none';
+  put($('#who'), h`<span>${me.display_name || ''}</span>`);
+  put($('#pghead'), h`<div class="wrap pgh"><div class="pgt"><small>لوحة التقويم المدرسي الذكي</small><h1>مرحباً، ${me.display_name || ''}</h1></div><p class="pgd">لوحة التحكم خاصة بفريق التقويم المدرسي.</p></div>`);
+  put($('#view'), h`<div class="wrap"><div class="pn" style="max-width:620px;margin:28px auto;text-align:center;padding:32px 22px">
+    <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--brand);margin-bottom:10px"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.9 3.1-7 7-7 1.4 0 2.7.4 3.8 1.1"/><circle cx="18" cy="17" r="4.5"/><path d="M15 20l6-6"/></svg>
+    <h2 style="margin:0 0 8px">لست عضواً في فريق التقويم المدرسي</h2>
+    <p class="muted" style="margin:0 0 6px">حسابك في النواة الرقمية صحيح، لكنه غير مضاف إلى فريق التقويم المدرسي الذكي، فلا تظهر لك صفحات اللوحة.</p>
+    <p class="muted" style="margin:0 0 18px">إن كنت من أعضاء الفريق فتواصل مع منسق التقويم ليضيفك، ثم حدّث هذه الصفحة.</p>
+    <div class="pa" style="justify-content:center"><a class="btn pri" href="./">الموقع العام للتقويم المدرسي</a><a class="btn" href="https://i3zalmadeni.github.io/digital-core">النواة الرقمية</a></div>
+  </div></div>`);
+  document.title = 'لست عضواً في الفريق | لوحة التقويم المدرسي الذكي';
+}
 function drawCycles() {
   put($('#cycSel'), h`${S.cycles.length ? S.cycles.map(c => h`<option value="${c.id}" ${c.id === S.cid ? raw('selected') : ''}>${c.name} — ${L.cycle[c.status]}</option>`) : h`<option value="">لا توجد دورة</option>`}`);
 }
@@ -74,12 +91,12 @@ App.reloadStaff = async () => { const [r, t] = await Promise.all([sb.from('staff
 
 // الدخول من هذا النظام نفسه بمعرّف حساب النواة الرقمية. الجلسة مشتركة مع بقية الأنظمة على الأصل نفسه.
 const LOGIN_MSG = {
-  denied: 'حسابك معروف في النواة الرقمية لكنه غير مرتبط بنظام التقويم الذاتي. يعيّن مدير النواة المنسق، ويضيف المنسق أعضاء الفريق.',
+  denied: 'حسابك معروف في النواة الرقمية لكنه غير مرتبط بنظام التقويم المدرسي الذكي. يعيّن مدير النواة المنسق، ويضيف المنسق أعضاء الفريق.',
   nostaff: 'هذا الحساب غير مرتبط بسجل منسوب في النواة الرقمية أو غير مفعّل.',
 };
 function showLogin(code = '') {
   $('#shell').hidden = true; const el = $('#login'); el.hidden = false;
-  put(el, h`<div class="login"><div class="pn">${raw(App.loginFormHTML('تسجيل الدخول · لوحة التقويم الذاتي الذكي', LOGIN_MSG[code] || ''))}
+  put(el, h`<div class="login"><div class="pn">${raw(App.loginFormHTML('تسجيل الدخول · لوحة التقويم المدرسي الذكي', LOGIN_MSG[code] || ''))}
     <p class="muted" style="margin-top:12px"><a href="./">العودة إلى الموقع العام</a></p></div></div>`);
   $('#lf').onsubmit = async e => {
     e.preventDefault();
@@ -107,7 +124,7 @@ function drawHead(hd) {
   App.head = hd || App.head; const x = App.head; if (!x) return;
   put($('#pghead'), h`<div class="wrap pgh"><div class="pgt"><small>${x.kick}</small><h1>${x.title}</h1></div><p class="pgd">${x.desc}</p>
     <div class="pgx"><span class="lu" title="آخر تحديث للبيانات">${App.stamp ? 'حُدِّثت ' + hhmm(App.stamp) : ''}</span><button class="btn sm" type="button" data-a="refreshNow" aria-label="تحديث البيانات">${App.ICO_REFRESH}تحديث</button></div></div>`);
-  document.title = x.title + ' | لوحة التقويم الذاتي';
+  document.title = x.title + ' | لوحة التقويم المدرسي الذكي';
 }
 App.ICO_REFRESH = raw('<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>');
 Act.refreshNow = async () => { await App.refresh(); toast('حُدِّثت البيانات'); };
@@ -129,6 +146,7 @@ App.indBack = () => {
   return null;
 };
 async function route(opt = {}) {
+  if (!S.me) return;                                     // قبل الدخول أو لمن ليس في الفريق: لا توجيه
   noteHash();
   const parts = location.hash.slice(1).split('/'); let name = parts[0] || (role() === 'team_member' ? 'desk' : 'dashboard'), args = parts.slice(1);
   if (role() === 'team_member' && (name === 'team' || name === 'platform')) name = 'desk';
@@ -184,9 +202,9 @@ document.addEventListener('click', async e => {
   finally { el.disabled = false; }
 });
 $('#cycSel').onchange = e => { S.cid = e.target.value || null; try { localStorage.setItem('cyc', S.cid || ''); } catch {} route(); };
-$('#out').onclick = async () => { S.me = null; await sb.auth.signOut(); location.href = './'; };   // الخروج يعيد إلى الصفحة الرئيسية للنظام
+$('#out').onclick = async () => { S.me = null; S.denied = false; await sb.auth.signOut(); location.href = './'; };   // الخروج يعيد إلى الصفحة الرئيسية للنظام
 // انتهاء الجلسة من جهة الخادم (أو تسجيل الخروج من تبويب آخر): نرجع إلى شاشة الدخول برسالة واضحة بدل أخطاء صامتة
-sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT' && S.me) { S.me = null; showLogin(); } });
+sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT' && (S.me || S.denied)) { S.me = null; S.denied = false; showLogin(); } });
 window.addEventListener('offline', () => toast('لا يوجد اتصال بالإنترنت: لن تُحفظ التعديلات حتى يعود', true));
 window.addEventListener('online', () => { toast('عاد الاتصال'); App.refresh?.(); });
 window.addEventListener('hashchange', () => route());
