@@ -90,6 +90,16 @@ function wrap(b, tbl) {
   });
 }
 
+// «تذكرني»: من سجّل دخوله دون تذكّر تنتهي جلسته بإغلاق المتصفح. علامة se_alive ملف تعريف جلسة (بلا تاريخ انتهاء) يزول بإغلاق المتصفح،
+// فإن غاب ووُجدت علامة عدم التذكّر تُحذف الجلسة المحفوظة قبل إنشاء العميل.
+(() => {
+  try {
+    if (localStorage.getItem('se_noremember') === '1' && !/(?:^|;\s*)se_alive=1/.test(document.cookie)) {
+      Object.keys(localStorage).filter(k => /^sb-.*-auth-token$/.test(k)).forEach(k => localStorage.removeItem(k));
+      localStorage.removeItem('se_noremember');
+    }
+  } catch {}
+})();
 window.makeClient = (url, key) => {
   const raw = supabase.createClient(url, key);
   return {

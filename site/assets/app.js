@@ -46,7 +46,7 @@ async function load() {
   if (session) { role = await sb.myRole(); }
   const ll = $('#loginLink'); if (ll) ll.hidden = !session;
   const al = $('#adminLink');
-  if (al) al.setAttribute('href', (role && ['coordinator','team_member','principal'].includes(role.role)) ? 'admin.html' : '#login');
+  if (al) al.setAttribute('href', session ? 'admin.html' : '#login');   // كل من سجّل دخوله يذهب إلى اللوحة، وهي تعرض لغير عضو الفريق رسالة توضيحية بدل إخراجه
   const lv = lvRes && lvRes.data;
   if (lv && lv.length) THR = lv.filter(x => x.min_pct != null).map(x => [x.code, +x.min_pct]).sort((a, b) => b[1] - a[1]);
   await loadOwners();
@@ -425,14 +425,13 @@ async function evidenceBlock(cid, iid) {
 document.addEventListener('click', e => { const b = e.target.closest('[data-ev]'); if (b) App.openViewer(b.dataset.ev, b.dataset.t, true); });
 
 function login() {
-  if (session) { sb.auth.signOut().then(() => { location.href = './'; }); return; }
+  if (session) { location.href = 'admin.html'; return; }   // كان هنا تسجيل خروج: فمن ليس في الفريق كان يُخرج من حسابه عند الضغط على «لوحة التحكم»
   view.innerHTML = `<div class="panel" style="max-width:480px;margin-inline:auto">${App.loginFormHTML('تسجيل الدخول · التقويم المدرسي الذكي')}</div>`;
   $('#lf').onsubmit = async e => {
     e.preventDefault();
     const { error } = await App.signIn($('#le').value, $('#lp').value);
     if (error) { $('#lerr').textContent = error; return; }
-    location.hash = '#home'; await boot();
-    if (isTeam()) location.href = 'admin.html';
+    location.href = 'admin.html';
   };
 }
 

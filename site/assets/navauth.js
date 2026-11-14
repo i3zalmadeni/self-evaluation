@@ -7,7 +7,7 @@
     const sb = makeClient(APP_CONFIG.supabaseUrl, APP_CONFIG.supabaseKey);
     const { data } = await sb.auth.getSession(); const s = data.session; if (!s) return;
     const p = await sb.myRole();
-    if (adm && p && ['coordinator', 'team_member', 'principal'].includes(p.role)) adm.setAttribute('href', 'admin.html');
+    if (adm) adm.setAttribute('href', 'admin.html');   // اللوحة تتولى عرض رسالة لمن ليس في الفريق
     login.hidden = false; login.setAttribute('href', '#');
     login.addEventListener('click', async e => { e.preventDefault(); await sb.auth.signOut(); location.href = './'; });
   } catch (e) { /* تبقى القائمة بحالتها الافتراضية */ }

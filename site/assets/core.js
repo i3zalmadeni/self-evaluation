@@ -180,12 +180,21 @@ async function openViewer(evidenceId, title, canDownload = true) {
 const toAuthEmail = v => { v = String(v || '').trim().toLowerCase(); return v.includes('@') ? v : v + '@' + (window.LOGIN_DOMAIN || 'id.invalid'); };
 const signIn = async (id, password) => {
   const { error } = await sb.auth.signInWithPassword({ email: toAuthEmail(id), password });
-  if (!error) return { error: null };
+  if (!error) {
+    const rem = document.getElementById('lrem')?.checked !== false;
+    try {
+      if (rem) { localStorage.setItem('se_login_id', String(id || '').trim()); localStorage.removeItem('se_noremember'); }
+      else { localStorage.removeItem('se_login_id'); localStorage.setItem('se_noremember', '1'); document.cookie = 'se_alive=1; path=/; SameSite=Lax'; }
+    } catch {}
+    return { error: null };
+  }
   return { error: /banned/.test(error.code || '') ? 'هذا الحساب موقوف. راجع مدير النواة.' : (error.code === 'invalid_credentials' || error.status === 400) ? 'بيانات الدخول غير صحيحة.' : 'تعذر الاتصال بالخادم، حاول مرة أخرى.' };
 };
+const lastId = () => { try { return localStorage.getItem('se_login_id') || ''; } catch { return ''; } };
 const loginFormHTML = (sub, msg = '') => `<img src="assets/core-logo.svg" alt="النواة الرقمية" style="width:72px;height:72px;display:block;margin:0 auto 8px"><h2 style="text-align:center;margin:0 0 4px">النواة الرقمية</h2><p class="muted" style="text-align:center;margin:0 0 14px">${sub}</p>
-  <form class="f frm" id="lf"><label class="fld"><span>معرّف الدخول</span><input id="le" name="e" type="text" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr" placeholder="أرقام أو حروف إنجليزية"></label>
+  <form class="f frm" id="lf"><label class="fld"><span>معرّف الدخول</span><input id="le" name="e" type="text" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr" placeholder="أرقام أو حروف إنجليزية" value="${esc(lastId())}"></label>
   <label class="fld"><span>كلمة المرور</span><input id="lp" name="p" type="password" required autocomplete="current-password" dir="ltr"></label>
+  <label class="rem" style="display:flex;align-items:center;gap:8px;margin:2px 0 10px;cursor:pointer;font-size:.92rem"><input id="lrem" type="checkbox" checked style="width:18px;height:18px;accent-color:var(--brand);margin:0"><span>تذكرني <small class="muted">(يبقى دخولك ومعرّفك محفوظَين على هذا الجهاز)</small></span></label>
   <div class="err" id="lerr" role="alert">${msg}</div><button class="btn pri" type="submit">دخول</button></form>`;
 window.Pages = {}; window.Act = {};
 window.App = { signIn, loginFormHTML, sb, h, raw, esc, Raw, $, $$, put, L, lab, opts, nf, dt, dtt, today, codeCmp, S, staffName, staffOpts, cycle, role, isCoord, canReview,
