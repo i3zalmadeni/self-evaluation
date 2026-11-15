@@ -12,7 +12,6 @@ const MENU = [
   ['inds', 'إدارة المؤشرات', '*'],
   ['team', 'إدارة الفريق', ['coordinator', 'principal']],
   ['platform', 'إدارة المنصة', ['coordinator', 'principal']],
-  ['alerts', 'التنبيهات', '*'],
   ['reports', 'التقارير', '*', 1], ['log', 'سجل النشاط', CP, 1],
   ['evidence', 'الشواهد', '*', 1], ['indmap', 'خريطة التقدم', '*', 1],
   ['cycles', 'دورات التقويم', CPR, 1], ['wa', 'واتساب', ['coordinator'], 1],
@@ -26,7 +25,7 @@ const hubOf = n => role() === 'team_member' && DESKP.includes(n) ? 'desk' : HUB_
 const allowed = (r) => r === '*' || r.includes(role());
 
 // القائمة العلوية: عناصر قبل أول مجموعة تظهر مباشرة، وكل مجموعة تُفتح كقائمة منسدلة
-const MICON = { dashboard: 'bars', alerts: 'bell', inds: 'note', team: 'users', platform: 'layers', desk: 'user' };
+const MICON = { dashboard: 'bars', inds: 'note', team: 'users', platform: 'layers', desk: 'user' };
 function drawMenu() {
   const cur0 = location.hash.slice(1).split('/')[0] || (role() === 'team_member' ? 'desk' : 'dashboard'), cur = role() === 'team_member' && (cur0 === 'team' || cur0 === 'platform') ? 'desk' : (hubOf(cur0) || cur0);
   const nb = App.hubBadges ? App.hubBadges(App.lastAlerts) : {};
@@ -111,7 +110,6 @@ function showLogin(code = '') {
 /* ===== الترويسة الثابتة: اسم الصفحة وما تحويه، بنمط واحد في كل صفحات لوحة التحكم ===== */
 const DETAIL = {
   notifications: ['مكتبي الإلكتروني', 'الإشعارات', 'ما ينتظر إجراءك ونتائج طلباتك ومستجدات النظام، بالتصميم نفسه في كل أنظمة النواة الرقمية.', 'dashboard'],
-  alerts: ['مكتبي الإلكتروني', 'التنبيهات', 'كل الإجراءات المعلّقة عليك مرتبة بدرجة الاستعجال: اعتمادات ومتابعات ومواعيد، وتتجدد عند كل إجراء.'],
   ind: ['المؤشرات', 'صفحة المؤشر', 'النص الرسمي للمؤشر ومسؤوله ومقيّمه وشواهده وتقييمه ومبرراته وزياراته ومهامه وسجل تعديلاته.', 'inds'],
   meeting: ['الاجتماعات', 'تفاصيل الاجتماع', 'المحاور والدعوات وتأكيد الحضور والحضور الفعلي والمحضر والقرارات.', 'team'],
   visit: ['الزيارات الفنية', 'تفاصيل الزيارة', 'بطاقات المؤشرات والملاحظات والتوصيات والإجراءات المطلوبة ومتابعتها.', 'team'],
@@ -186,7 +184,7 @@ App.refresh = async () => { App.dropCache?.(); await route({ keep: true }); };
 
 /* ===== تحديث حيّ: شارات القائمة تتجدد دورياً، والصفحات التشغيلية تتجدد صامتة عند عدم انشغال المستخدم ===== */
 let lastPoll = Date.now();
-const LIVE = new Set(['dashboard/overview', 'alerts/', 'dashboard/', 'team/overview', 'team/']);
+const LIVE = new Set(['dashboard/overview', 'notifications/', 'dashboard/', 'team/overview', 'team/']);
 async function poll() {
   if (document.hidden || !S.me || !S.cid) return;
   lastPoll = Date.now(); App.dropCache?.();

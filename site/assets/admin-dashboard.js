@@ -1,5 +1,5 @@
 /* لوحة المتابعة والتنبيهات: بيانات حقيقية من القاعدة، وكل بند يحتاج إجراءً يظهر بزر الإجراء المناسب لدور المستخدم.
-   تُحمَّل بعد صفحات اللوحة وقبل admin.js. تستبدل Pages.dashboard وتضيف Pages.alerts. */
+   تُحمَّل بعد صفحات اللوحة وقبل admin.js. تستبدل Pages.dashboard، وتوفّر App.alerts مصدراً لصفحة الإشعارات. */
 (() => {
 const { sb, h, raw, $, put, S, L, nf, dt, dtt, staffName, toast, run, must, ask, sure, badge, sb_, table, btn, pageHead, panel, isCoord, role, canReview } = App;
 const MS = 864e5;
@@ -176,7 +176,7 @@ App.alerts = async () => { const D = await App.data(); const A = buildAlerts(D);
 const actHtml = a => a.href ? h`<a class="btn sm ${a.cls || ''}" href="${a.href}">${a.label}</a>` : btn(a.label, a.a, a.data || {}, a.cls || '');
 const itemHtml = i => h`<li class="db-it ${i.tone}"><div class="db-itx"><b>${i.title}${i.chip ? h` <span class="bdg warn">${i.chip}</span>` : ''}</b><small>${i.sub}</small></div><div class="chips">${i.acts.map(actHtml)}</div></li>`;
 const groupCard = (g, max) => h`<section class="db-g ${g.tone}"><header><span class="db-gi">${ico(g.icon)}</span><div><h3>${g.title}</h3><small>${g.desc}</small></div><span class="db-gc">${nf(g.items.length)}</span></header>
-  <ul>${g.items.slice(0, max).map(itemHtml)}</ul>${g.items.length > max ? h`<a class="db-more" href="#alerts">وعرض ${nf(g.items.length - max)} أخرى في صفحة التنبيهات</a>` : ''}</section>`;
+  <ul>${g.items.slice(0, max).map(itemHtml)}</ul>${g.items.length > max ? h`<a class="db-more" href="#notifications">وعرض ${nf(g.items.length - max)} أخرى في صفحة الإشعارات</a>` : ''}</section>`;
 
 App.groupCard = groupCard; App.itemHtml = itemHtml;
 
@@ -321,7 +321,7 @@ Pages.dashboard = async () => {
 
   <section class="db-hero cmp desk"><div class="db-ht"><small>أهلاً بك في مكتبك الإلكتروني</small><div class="deskwho">${App.avatarHtml(S.staff.find(x => x.id === S.me.staff_id) || { display_name: S.me.display_name }, 64)}<h1>${(() => { const st = S.staff.find(x => x.id === S.me.staff_id) || {}, n = st.full_name || S.me.display_name, t = st.job_title || (S.me.display_name !== n ? S.me.display_name : ''); return n ? 'مرحباً، ' + n + (t ? ' (' + t + ')' : '') : 'مرحباً بك'; })()}</h1></div>
       <p class="muted">${c.name} · ${left == null ? 'لم يُحدَّد تاريخ نهاية الدورة.' : left >= 0 ? 'متبقٍ ' + nf(left) + ' يوماً على نهاية الدورة · ' + dt(c.end_date) : 'تجاوزت الدورة نهايتها بـ ' + nf(-left) + ' يوماً'}</p>
-      <div class="chips"><a class="db-chip ${A.total ? 'warn' : 'ok'}" href="#alerts">${ico('bell')} ${A.total ? nf(A.total) + ' تحتاج إجراء' : 'لا إجراءات معلّقة'}</a><span class="db-chip">${ico('layers')} ${nf(stdDone)} معيار منجز من ${nf(stds.length)}</span><span class="db-chip">${ico('task')} ${nf(tkDone)} مهمة منجزة من ${nf(tk.length)}</span></div></div>
+      <div class="chips"><a class="db-chip ${A.total ? 'warn' : 'ok'}" href="#notifications">${ico('bell')} ${A.total ? nf(A.total) + ' تحتاج إجراء' : 'لا إجراءات معلّقة'}</a><span class="db-chip">${ico('layers')} ${nf(stdDone)} معيار منجز من ${nf(stds.length)}</span><span class="db-chip">${ico('task')} ${nf(tkDone)} مهمة منجزة من ${nf(tk.length)}</span></div></div>
   </section>
 
 
@@ -331,9 +331,9 @@ Pages.dashboard = async () => {
   <section class="win w-cal"><header><span class="db-gi">${ico('cal')}</span><h2>التقويم والأجندة</h2><a class="btn sm" href="#team/cal">تقويم الفريق</a></header>
     <div class="wc"><div id="wcal" class="calbox">${calHtml()}</div><div id="wag" class="agbox">${agHtml()}</div></div></section>
 
-  ${win('w-act ' + (A.bySev.bad ? 'bad' : A.total ? 'warn' : 'ok'), 'bell', 'إجراءات تحتاج قرارك', '#alerts', 'كل التنبيهات (' + nf(A.total) + ')',
-    h`${mini(items.slice(0, 4).map(itemHtml), 'لا توجد إجراءات معلّقة. كل شيء منجز.')}${items.length > 4 ? h`<a class="db-more" href="#alerts">وعرض ${nf(items.length - 4)} آخر</a>` : ''}
-    ${nstrip([{ ico: 'alert', label: 'عاجل', v: A.bySev.bad, tone: 'bad', href: '#alerts' }, { ico: 'clock', label: 'يحتاج متابعة', v: A.bySev.warn, tone: 'warn', href: '#alerts' }, { ico: 'bell', label: 'للعلم', v: A.bySev.info, tone: 'info', href: '#alerts' }])}`)}
+  ${win('w-act ' + (A.bySev.bad ? 'bad' : A.total ? 'warn' : 'ok'), 'bell', 'إجراءات تحتاج قرارك', '#notifications', 'كل الإشعارات (' + nf(A.total) + ')',
+    h`${mini(items.slice(0, 4).map(itemHtml), 'لا توجد إجراءات معلّقة. كل شيء منجز.')}${items.length > 4 ? h`<a class="db-more" href="#notifications">وعرض ${nf(items.length - 4)} آخر</a>` : ''}
+    ${nstrip([{ ico: 'alert', label: 'عاجل', v: A.bySev.bad, tone: 'bad', href: '#notifications' }, { ico: 'clock', label: 'يحتاج متابعة', v: A.bySev.warn, tone: 'warn', href: '#notifications' }, { ico: 'bell', label: 'للعلم', v: A.bySev.info, tone: 'info', href: '#notifications' }])}`)}
 
   ${win('w-ind', 'note', 'إدارة المؤشرات', '#inds/list', 'فتح المؤشرات',
     h`${moves.length ? h`<h3 class="wh">مؤشرات تحتاج تحرّكاً</h3>` : ''}${mini(moves.slice(0, 4).map(itemHtml), 'كل المؤشرات مسندة وبدأ تقييمها.')}${moves.length > 4 ? h`<a class="db-more" href="#inds/list/not_evaluated">وعرض ${nf(moves.length - 4)} آخر</a>` : ''}
@@ -363,16 +363,5 @@ Pages.dashboard = async () => {
   </div></div>`;
 };
 
-/* ===== صفحة التنبيهات ===== */
-const AF = { sev: '' };
-Act.dbAlertF = ({ f }) => { AF.sev = f; App.refresh(); };
-Pages.alerts = async () => {
-  const nc = App.needCycle(); if (nc) return nc;
-  const A = await App.alerts(); App.drawMenu?.();
-  const SL = { '': 'الكل', bad: 'عاجل', warn: 'يحتاج متابعة', info: 'للعلم' };
-  const groups = A.groups.map(g => ({ ...g, items: AF.sev ? g.items.filter(i => i.tone === AF.sev) : g.items })).filter(g => g.items.length);
-  return h`<div class="flt"><span class="bdg ${A.total ? 'warn' : 'ok'}">${nf(A.total)} إجراء</span>${Object.entries(SL).map(([k, v]) => btn(`${v}${k ? ' (' + nf(A.bySev[k]) + ')' : ''}`, 'dbAlertF', { f: k }, AF.sev === k ? 'pri' : ''))}</div>
-  ${groups.length ? h`<div class="db-ac one">${groups.map(g => groupCard(g, 999))}</div>` : h`<div class="pn"><p class="muted empty">لا توجد تنبيهات${AF.sev ? ' بهذه الدرجة' : ' الآن. كل ما يخصّك منجز'}.</p></div>`}
-  <p class="muted">التنبيهات محسوبة مباشرة من بيانات الدورة الحالية وتتجدد عند كل إجراء. ما يظهر لك يتبع دورك: المنسق يرى ما ينتظر اعتماده، والعضو يرى ما يخصّه.</p>`;
-};
+/* صفحة التنبيهات السابقة حلّت محلها صفحة «الإشعارات» الموحّدة (ub.js، #notifications). */
 })();
