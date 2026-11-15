@@ -309,7 +309,7 @@ Pages.dashboard = async () => {
     ...ref.inds.filter(i => hasEv.has(i.id) && stOf(i) === 'not_evaluated').map(i => ({ tone: 'warn', title: i.code + ' — ' + short(i.official_text, 60), sub: 'لم يبدأ تقييمه · المقيّم: ' + evOf(i.id).join('، '), acts: [{ label: 'فتح المؤشر', href: '#ind/' + i.id }] })),
   ];
   const setup = (co || role() === 'principal') ? [
-    ...[...new Set(resp.filter(r => r.kind === 'evaluator' && !accSet.has(r.staff_id) && stf(r.staff_id)?.is_active).map(r => r.staff_id))].slice(0, 3).map(id => ({ tone: 'warn', title: 'مقيّم بلا حساب: ' + staffName(id), sub: 'لا يستطيع تسجيل تقييمه قبل إنشاء حساب له.', acts: co ? [{ label: 'إنشاء حساب', href: '#platform/staff', cls: 'pri' }] : [] })),
+    ...[...new Set(resp.filter(r => r.kind === 'evaluator' && !accSet.has(r.staff_id) && stf(r.staff_id)?.is_active).map(r => r.staff_id))].slice(0, 3).map(id => ({ tone: 'warn', title: 'مقيّم بلا حساب: ' + staffName(id), sub: 'لا يستطيع تسجيل تقييمه قبل إنشاء حساب له.', acts: co ? [{ label: 'إنشاء حساب', href: '#perms', cls: 'pri' }] : [] })),
     ...(noRs ? [{ tone: 'warn', title: nf(noRs) + ' مؤشراً بلا مسؤول', sub: 'المسؤول يوفّر الشواهد والوثائق للمؤشر.', acts: co ? [{ label: 'إسناد المسؤوليات', href: '#platform/assign', cls: 'pri' }] : [] }] : []),
   ] : [];
   const strip = D.anns.slice().sort((a, b) => (b.priority !== 'normal') - (a.priority !== 'normal'));
@@ -351,7 +351,7 @@ Pages.dashboard = async () => {
     <div class="wb"><a class="btn sm" href="#team/tasks">المهام</a><a class="btn sm" href="#team/meetings">الاجتماعات</a><a class="btn sm" href="#team/visits">الزيارات</a></div>
     ${nstrip([{ ico: 'clock', label: 'قيد التنفيذ', v: Math.max(tkRun, 0), tone: 'info', href: '#team/tasks' }, { ico: 'alert', label: 'متأخرة', v: tkLate, tone: 'bad', href: '#team/tasks' }, { ico: 'note', label: co ? 'بانتظار المراجعة' : 'مقترحة', v: co ? tkRev : tkProp, tone: 'warn', href: '#team/tasks' }, { ico: 'check', label: 'مكتملة', v: tkDone, tone: 'ok', href: '#team/tasks' }])}`)}
 
-  ${win('w-plat', 'users', 'إدارة المنصة', '#platform/staff', 'فتح إدارة المنصة',
+  ${win('w-plat', 'users', 'إدارة البوابة', '#platform', 'فتح إدارة البوابة',
     h`${setup.length ? h`<h3 class="wh">يحتاج إعداداً</h3><ul class="wl">${setup.map(itemHtml)}</ul>` : h`<p class="muted empty">إعدادات المنصة مكتملة: كل المقيّمين لهم حسابات وكل المؤشرات مسندة.</p>`}
     <div class="wb">${[['assign', 'الإسناد'], ['cycles', 'الدورات'], ['ann', 'الإعلانات'], ['wa', 'واتساب']].filter(([t]) => App.teamTabAllowed(t)).map(([t, l]) => h`<a class="btn sm" href="#platform/${t}">${l}</a>`)}</div>
     ${nstrip([{ ico: 'users', label: 'منسوبون', v: staffAct, tone: 'info' }, ...(App.teamTabAllowed('staff') || role() === 'principal' ? [{ ico: 'user', label: 'حسابات فعّالة', v: accounts, tone: 'ok' }] : []), { ico: 'mega', label: 'إعلانات سارية', v: D.anns.length, tone: 'info', href: '#ann' }])}`)}

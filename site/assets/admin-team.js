@@ -11,12 +11,16 @@ const dayDiff = s => Math.round((new Date(String(s).slice(0, 10) + 'T00:00:00') 
 const pctOf = (a, b) => b ? Math.round(a / b * 100) : 0;
 const CO = ['coordinator'], CP = ['coordinator', 'principal'], CPR = ['coordinator', 'principal', 'reviewer'];
 const TABS = [['overview', 'نظرة عامة', '*', 'ما يتطلب قراراً أو تنفيذاً من الفريق الآن: الأجندة القادمة ولوحة المهام والزيارات.'], ['tasks', 'المهام والتكليفات', '*', 'اقتراح المهام واعتمادها وتكليف الأعضاء ومتابعة التنفيذ وإغلاقها.'], ['meetings', 'الاجتماعات', '*', 'جدولة الاجتماعات والدعوات وتأكيد الحضور والحضور الفعلي والمحاضر والقرارات.'], ['visits', 'الزيارات الفنية', '*', 'زيارات المؤشرات وبطاقاتها الفنية والتوصيات ومتابعة الإجراءات التحسينية.'], ['cal', 'المواعيد والتقويم', '*', 'تقويم موحّد للاجتماعات والمهام والمواعيد النهائية لإغلاق المجالات والمؤشرات.']];
-const PLAT = [['overview', 'نظرة عامة', '*', 'صورة واحدة لكل ما في إدارة المنصة: الأعضاء والحسابات، الإسناد، الإعلانات، الدورات، وواتساب، وما يحتاج إجراءً منها.'], ['staff', 'الأعضاء والحسابات', CO, 'منسوبو المدرسة وحسابات الدخول والأدوار وبيانات التواصل.'], ['assign', 'الإسناد والمسؤوليات', CP, 'إسناد المجالات والمؤشرات للمسؤولين والمقيّمين وملف مسؤوليات كل شخص.'], ['ann', 'الإعلانات', '*', 'إعلانات الفريق ودرجة أهميتها والمستلمون ومن اطّلع عليها.'], ['cycles', 'دورات التقويم', CPR, 'إنشاء الدورات وإطلاقها وإيقافها وإغلاقها مع حفظ سجلّ الدورات السابقة.'], ['wa', 'واتساب', CO, 'إعدادات الإشعارات وقوالب الرسائل وسجل الإرسال ونجاحه أو فشله.']];
+const PLAT = [['overview', 'نظرة عامة', '*', 'صورة واحدة لكل ما في إدارة البوابة: الإسناد، الإعلانات، الدورات، وواتساب، وما يحتاج إجراءً منها.'], ['assign', 'الإسناد والمسؤوليات', CP, 'إسناد المجالات والمؤشرات للمسؤولين والمقيّمين وملف مسؤوليات كل شخص.'], ['ann', 'الإعلانات', '*', 'إعلانات الفريق ودرجة أهميتها والمستلمون ومن اطّلع عليها.'], ['cycles', 'دورات التقويم', CPR, 'إنشاء الدورات وإطلاقها وإيقافها وإغلاقها مع حفظ سجلّ الدورات السابقة.'], ['wa', 'واتساب', CO, 'إعدادات الإشعارات وقوالب الرسائل وسجل الإرسال ونجاحه أو فشله.']];
 const ok = r => r === '*' || r.includes(role());
 App.TEAM_TABS = TABS.map(t => t[0]).filter(t => t !== 'overview');
 App.PLATFORM_TABS = PLAT.map(t => t[0]).filter(t => t !== 'overview');
-(App.HUBS ||= {}).team = { title: 'إدارة الفريق', tabs: TABS }; App.HUBS.platform = { title: 'إدارة المنصة', tabs: PLAT };
-App.teamTabAllowed = t => { const x = [...TABS, ...PLAT].find(y => y[0] === t); return !x || ok(x[2]); };
+(App.HUBS ||= {}).team = { title: 'إدارة الفريق', tabs: TABS }; App.HUBS.platform = { title: 'إدارة البوابة', tabs: PLAT };
+// الصلاحيات: صفحة مستقلة قبل «إدارة البوابة» (الأعضاء والحسابات والأدوار)
+const PERMS = [['staff', 'الأعضاء والحسابات والأدوار', CO, 'منسوبو المدرسة وحسابات الدخول والأدوار وبيانات التواصل.']];
+App.HUBS.perms = { title: 'الصلاحيات', tabs: PERMS };
+const tabHref = t => t === 'staff' ? '#perms' : '#platform/' + t;
+App.teamTabAllowed = t => { const x = [...TABS, ...PLAT, ...PERMS].find(y => y[0] === t); return !x || ok(x[2]); };
 
 /* ===== فحوص الجاهزية: كل بند محسوب من بيانات حقيقية ===== */
 function readiness(D) {
@@ -133,7 +137,7 @@ async function overview() {
 function readinessPanel(D) {
   const rd = readiness(D), issues = rd.filter(r => r.bad);
   return h`<details class="pn tm-more"${issues.length ? raw(' open') : ''}><summary>جاهزية الحسابات والإسناد <span class="bdg ${issues.length ? 'warn' : 'ok'}">${issues.length ? nf(issues.length) + ' ملاحظة' : 'جاهز'}</span></summary><ul class="tm-rd">${rd.map(r => h`<li class="${r.bad ? 'bad' : 'ok'}"><span class="tm-ri">${r.bad ? '!' : '✓'}</span><div><b>${r.label}${r.bad ? h` <span class="bdg ${r.key === 'wa' || r.key === 'idle' ? 'warn' : 'bad'}">${nf(r.items.length)}</span>` : ''}</b>
-    <small>${r.bad ? h`${r.items.slice(0, 6).join('، ')}${r.items.length > 6 ? '…' : ''} — ${r.why}` : 'لا ملاحظات'}</small></div>${r.bad ? h`<a class="btn sm" href="#platform/${r.tab}">${r.go}</a>` : ''}</li>`)}</ul></details>`;
+    <small>${r.bad ? h`${r.items.slice(0, 6).join('، ')}${r.items.length > 6 ? '…' : ''} — ${r.why}` : 'لا ملاحظات'}</small></div>${r.bad ? h`<a class="btn sm" href="${tabHref(r.tab)}">${r.go}</a>` : ''}</li>`)}</ul></details>`;
 }
 
 /* ===== التبويبات ===== */
@@ -161,7 +165,7 @@ async function platBadges() {
   } catch { return {}; }
 }
 
-/* ===== إدارة المنصة: نظرة عامة تجمع كل ما في هذه الإدارة، وكل بطاقة تفتح صفحتها ===== */
+/* ===== إدارة البوابة: نظرة عامة تجمع كل ما في هذه الإدارة، وكل بطاقة تفتح صفحتها ===== */
 async function platOverview() {
   const D = await App.data(), co = isCoord(), canSee = co || role() === 'principal';
   const soft = async p => { try { const r = await p; return r.data || []; } catch { return []; } };
@@ -179,10 +183,10 @@ async function platOverview() {
   const sent = waMsgs.filter(m => ['sent', 'delivered'].includes(m.status)).length, queued = waMsgs.filter(m => m.status === 'queued').length, failed = waMsgs.filter(m => m.status === 'failed').length;
   return h`${App.tlSum([[active.length, 'منسوباً على رأس العمل'], [accs.filter(p => p.is_active).length, 'حسابات فعّالة', 'info'], [hasEv.size, 'مؤشر له مقيّم من ' + nf(n), hasEv.size === n ? 'ok' : 'warn'], [issues.length, 'ملاحظات جاهزية', issues.length ? 'bad' : 'ok']])}
   <div class="wins d3 desk3">
-  ${canSee ? win('t-task', 'users', 'الأعضاء والحسابات', '#platform/staff', 'إدارة الأعضاء', h`<div class="pv-b">${row('على رأس العمل', active.length, staff.length)}${row('لديهم حساب دخول', active.filter(x => accSet.has(x.id)).length, active.length, 'info')}${row('يصله واتساب (جوال وموافقة)', active.filter(x => x.phone && x.whatsapp_opt_in).length, active.length)}
-    <p class="muted">${nf(ext.length)} حساب مقيّم خارجي</p>${issues.filter(r => ['evnoacc', 'wa', 'inactive'].includes(r.key)).slice(0, 3).map(r => h`<a class="pv-i" href="#platform/${r.tab}">${App.ico('alert')} ${r.label} <b>${nf(r.items.length)}</b></a>`)}</div>`) : ''}
+  ${canSee ? win('t-task', 'users', 'الأعضاء والحسابات', '#perms', 'إدارة الأعضاء', h`<div class="pv-b">${row('على رأس العمل', active.length, staff.length)}${row('لديهم حساب دخول', active.filter(x => accSet.has(x.id)).length, active.length, 'info')}${row('يصله واتساب (جوال وموافقة)', active.filter(x => x.phone && x.whatsapp_opt_in).length, active.length)}
+    <p class="muted">${nf(ext.length)} حساب مقيّم خارجي</p>${issues.filter(r => ['evnoacc', 'wa', 'inactive'].includes(r.key)).slice(0, 3).map(r => h`<a class="pv-i" href="${tabHref(r.tab)}">${App.ico('alert')} ${r.label} <b>${nf(r.items.length)}</b></a>`)}</div>`) : ''}
   ${canSee ? win('t-ind', 'user', 'الإسناد والمسؤوليات', '#platform/assign', 'إدارة الإسناد', h`<div class="pv-b">${row('مؤشرات لها مقيّم', hasEv.size, n, 'ok')}${row('مؤشرات لها مسؤول', hasRs.size, n, 'ok')}${row('مجالات مُسنَدة', D.ref.domains.filter(d => D.resp.some(r => D.ref.im[r.indicator_id]?.dom?.id === d.id)).length, D.ref.domains.length)}
-    ${issues.filter(r => ['noev', 'nors', 'idle'].includes(r.key)).slice(0, 3).map(r => h`<a class="pv-i" href="#platform/${r.tab}">${App.ico('alert')} ${r.label} <b>${nf(r.items.length)}</b></a>`)}${!issues.some(r => ['noev', 'nors'].includes(r.key)) ? h`<p class="pv-ok">${App.ico('check')} كل المؤشرات لها مسؤول ومقيّم.</p>` : ''}</div>`) : ''}
+    ${issues.filter(r => ['noev', 'nors', 'idle'].includes(r.key)).slice(0, 3).map(r => h`<a class="pv-i" href="${tabHref(r.tab)}">${App.ico('alert')} ${r.label} <b>${nf(r.items.length)}</b></a>`)}${!issues.some(r => ['noev', 'nors'].includes(r.key)) ? h`<p class="pv-ok">${App.ico('check')} كل المؤشرات لها مسؤول ومقيّم.</p>` : ''}</div>`) : ''}
   ${win('t-prop', 'mega', 'الإعلانات', '#platform/ann', co ? 'إدارة الإعلانات' : 'كل الإعلانات', h`<div class="pv-b">${D.anns.length ? D.anns.slice(0, 4).map(a => h`<a class="pv-i ${a.priority}" href="#platform/ann">${App.ico('mega')} <span>${a.title}</span>${a.priority !== 'normal' ? h`<em>${L.prio[a.priority]}</em>` : ''}</a>`) : h`<p class="muted">لا إعلانات سارية.</p>`}<p class="muted">${nf(D.anns.length)} سارية${!co ? ' · ' + nf(unread) + ' لم تطّلع عليها' : ''}</p></div>`)}
   ${cyc || S.cycles.length ? win('t-task', 'layers', 'دورات التقويم', '#platform/cycles', 'إدارة الدورات', h`<div class="pv-b">${cyc ? h`<div class="pv-c"><b>${cyc.name}</b><span class="bdg ${cyc.status === 'active' ? 'ok' : cyc.status === 'paused' ? 'warn' : ''}">${L.cycle[cyc.status]}</span></div>
     <p class="muted">${dt(cyc.start_date)} ← ${dt(cyc.end_date)}${left == null ? '' : left >= 0 ? ' · متبقٍ ' + nf(left) + ' يوماً' : ' · تجاوزت نهايتها بـ ' + nf(-left) + ' يوماً'}</p><p>${cyc.results_published ? h`<span class="bdg ok">النتائج منشورة للموقع العام</span>` : h`<span class="bdg">النتائج غير منشورة</span>`}</p>` : h`<p class="muted">لا دورة محددة.</p>`}<p class="muted">${nf(S.cycles.length)} دورة محفوظة (السجل السابق لا يُحذف).</p></div>`) : ''}
@@ -190,16 +194,23 @@ async function platOverview() {
   </div>`;
 }
 Pages.team = async (parts) => {
-  if (App.PLATFORM_TABS.includes(parts[0])) return Pages.platform(parts);       // روابط قديمة (#team/staff…) تُحوَّل إلى إدارة المنصة
+  if (parts[0] === 'staff') { location.replace('#perms'); return ''; }
+  if (App.PLATFORM_TABS.includes(parts[0])) return Pages.platform(parts);       // روابط قديمة (#team/assign…) تُحوَّل إلى إدارة البوابة
   const tab = TABS.some(t => t[0] === parts[0]) ? parts[0] : 'overview', sub = parts.slice(1), tabs = TABS.filter(t => ok(t[2]));
   const [r, bg] = await Promise.all([tab === 'overview' ? overview() : Pages[tab](sub), S.cid ? badges() : {}]);
   return shell('إدارة الفريق', 'متابعة المهام والاجتماعات والزيارات والمواعيد', 'team', tabs, tab, bg, '', r?.html || r, r?.after);
 };
 Pages.platform = async (parts) => {
+  if (parts[0] === 'staff') { location.replace('#perms'); return ''; }   // الأعضاء والحسابات انتقلت إلى «الصلاحيات»
   const tabs = PLAT.filter(t => ok(t[2])), tab = tabs.some(t => t[0] === parts[0]) ? parts[0] : tabs[0]?.[0];
   if (!tab) return h`<div class="pn"><p>هذه الصفحة غير متاحة لدورك.</p></div>`;
   const canSee = isCoord() || role() === 'principal';
   const [r, bg, D] = await Promise.all([tab === 'overview' ? platOverview() : Pages[tab](parts.slice(1)), S.cid ? platBadges() : {}, canSee && S.cid ? App.data().catch(() => null) : null]);
-  return shell('إدارة المنصة', 'الأعضاء والحسابات والإسناد والإعلانات ودورات التقويم وواتساب', 'platform', tabs, tab, bg, D ? readinessPanel(D) : '', r?.html || r, r?.after);
+  return shell('إدارة البوابة', 'الإسناد والإعلانات ودورات التقويم وواتساب', 'platform', tabs, tab, bg, D ? readinessPanel(D) : '', r?.html || r, r?.after);
+};
+Pages.perms = async (parts) => {
+  if (!isCoord()) return h`<div class="pn"><p>هذه الصفحة غير متاحة لدورك.</p></div>`;
+  const r = await Pages.staff(parts[0] === 'staff' ? parts.slice(1) : parts);
+  return { html: h`<div class="tbody">${r?.html || r}</div>`, after: r?.after };
 };
 })();

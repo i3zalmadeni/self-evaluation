@@ -11,23 +11,24 @@ const MENU = [
   ['dashboard', 'مكتبي الإلكتروني', ['coordinator', 'principal']],
   ['inds', 'إدارة المؤشرات', '*'],
   ['team', 'إدارة الفريق', ['coordinator', 'principal']],
-  ['platform', 'إدارة المنصة', ['coordinator', 'principal']],
   ['reports', 'التقارير', '*', 1], ['log', 'سجل النشاط', CP, 1],
   ['evidence', 'الشواهد', '*', 1], ['indmap', 'خريطة التقدم', '*', 1],
   ['cycles', 'دورات التقويم', CPR, 1], ['wa', 'واتساب', ['coordinator'], 1],
-  ['staff', 'فريق التقويم', ['coordinator', 'principal'], 1], ['systems', 'الأنظمة المرتبطة', '*', 1], ['assign', 'المسؤوليات', CP, 1], ['ann', 'الإعلانات', '*', 1],
+  ['staff', 'الصلاحيات', ['coordinator'], 1], ['systems', 'الأنظمة المرتبطة', '*', 1], ['assign', 'المسؤوليات', CP, 1], ['ann', 'الإعلانات', '*', 1],
   ['meetings', 'الاجتماعات', '*', 1], ['visits', 'الزيارات الفنية', '*', 1], ['tasks', 'المهام والتكليفات', '*', 1], ['cal', 'التقويم والمواعيد', '*', 1],
+  ['perms', 'الصلاحيات', ['coordinator']],               // قبل الأخيرة: الأعضاء والحسابات والأدوار
+  ['platform', 'إدارة البوابة', ['coordinator', 'principal']],   // الأخيرة دائماً
 ];
 // اسم الصفحة الداخلية ← القسم الذي يحويها
-const HUB_OF = { reports: 'dashboard', log: 'dashboard', evidence: 'inds', indmap: 'inds', ind: 'inds', cycles: 'platform', wa: 'platform', staff: 'platform', assign: 'platform', ann: 'platform', tasks: 'team', meetings: 'team', meeting: 'team', visits: 'team', visit: 'team', cal: 'team' };
+const HUB_OF = { reports: 'dashboard', log: 'dashboard', evidence: 'inds', indmap: 'inds', ind: 'inds', cycles: 'platform', wa: 'platform', staff: 'perms', assign: 'platform', ann: 'platform', tasks: 'team', meetings: 'team', meeting: 'team', visits: 'team', visit: 'team', cal: 'team' };
 const DESKP = ['tasks', 'meetings', 'meeting', 'visits', 'visit', 'cal', 'ann'];
 const hubOf = n => role() === 'team_member' && DESKP.includes(n) ? 'desk' : HUB_OF[n];
 const allowed = (r) => r === '*' || r.includes(role());
 
 // القائمة العلوية: عناصر قبل أول مجموعة تظهر مباشرة، وكل مجموعة تُفتح كقائمة منسدلة
-const MICON = { dashboard: 'bars', inds: 'note', team: 'users', platform: 'layers', desk: 'user' };
+const MICON = { dashboard: 'bars', inds: 'note', team: 'users', platform: 'layers', perms: 'lock', desk: 'user' };
 function drawMenu() {
-  const cur0 = location.hash.slice(1).split('/')[0] || (role() === 'team_member' ? 'desk' : 'dashboard'), cur = role() === 'team_member' && (cur0 === 'team' || cur0 === 'platform') ? 'desk' : (hubOf(cur0) || cur0);
+  const cur0 = location.hash.slice(1).split('/')[0] || (role() === 'team_member' ? 'desk' : 'dashboard'), cur = role() === 'team_member' && (cur0 === 'team' || cur0 === 'platform' || cur0 === 'perms') ? 'desk' : (hubOf(cur0) || cur0);
   const nb = App.hubBadges ? App.hubBadges(App.lastAlerts) : {};
   put($('#menu'), h`${MENU.filter(m => !m[3] && allowed(m[2])).map(m => h`<a href="#${m[0]}" class="${m[0] === cur ? 'on' : ''}" ${m[0] === cur ? raw('aria-current="page"') : ''}>${MICON[m[0]] ? App.ico(MICON[m[0]]) : ''}<span class="ml">${m[1]}</span>${nb[m[0]] ? h` <span class="nb" aria-label="${nb[m[0]]} إجراء">${nb[m[0]] > 99 ? '99+' : App.nf(nb[m[0]])}</span>` : ''}</a>`)}`);
 }
