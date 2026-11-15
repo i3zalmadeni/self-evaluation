@@ -65,6 +65,7 @@ async function boot() {
   $('#login').hidden = true; $('#shell').hidden = false;
   (App.drawWho || (() => put($('#who'), h`${me.display_name || ''} · ${L.role[me.role]}`)))();
   route();
+  seUbStart(me, role() === 'team_member' ? '#desk' : '#dashboard');
   App.alerts().then(drawMenu).catch(() => {});
 }
 // صفحة من ليس عضواً في فريق التقويم: لوحة بلا قائمة ولا دورات، ورسالة واضحة بدل إخراجه من حسابه
@@ -73,6 +74,7 @@ function showDenied(me) {
   $('#login').hidden = true; $('#shell').hidden = false;
   put($('#menu'), h``); const cl = $('#cycSel')?.closest('.cyc'); if (cl) cl.style.display = 'none';
   put($('#who'), h`<span>${me.display_name || ''}</span>`);
+  ubSetName(me.display_name || '', '#');
   put($('#pghead'), h`<div class="wrap pgh"><div class="pgt"><small>لوحة التقويم المدرسي الذكي</small><h1>مرحباً، ${me.display_name || ''}</h1></div><p class="pgd">لوحة التحكم خاصة بفريق التقويم المدرسي.</p></div>`);
   put($('#view'), h`<div class="wrap"><div class="pn" style="max-width:620px;margin:28px auto;text-align:center;padding:32px 22px">
     <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--brand);margin-bottom:10px"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.9 3.1-7 7-7 1.4 0 2.7.4 3.8 1.1"/><circle cx="18" cy="17" r="4.5"/><path d="M15 20l6-6"/></svg>
