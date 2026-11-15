@@ -202,8 +202,10 @@ const SE_UB_ICO = { task: "clock", cal: "cal", mega: "alert", note: "file", clip
 function seUbStart(me, home) {
   ubSetName(me && me.display_name || "", home);
   if (window.__seUb) return; window.__seUb = true;
-  ubMount({ key: "se", uid: me && me.id, allUrl: "#notifications", load: async () => {
-    if (typeof S === "undefined" || !S.cid || !S.me) return [];
+  // أدوات التقويم داخل نطاق مغلق، ومتاحة عبر window.App فقط (لا متغيرات عامة h/btn/esc/S/sb)
+  ubMount({ key: "se", uid: me && me.id, client: App.sb, allUrl: "#notifications", load: async () => {
+    const { S, btn, esc } = App;
+    if (!S || !S.cid || !S.me) return [];
     // التنبيهات (الإجراءات المطلوبة) هي مصدر الإشعارات: كل مجموعة عنوانٌ في الصفحة، وأزرار إجرائها تعمل منها مباشرة
     const A = await App.alerts(), seen = new Set(), N = [];
     const act = (x) => x.href ? `<a class="${x.cls || ""}" href="${esc(x.href)}">${esc(x.label)}</a>` : String(btn(x.label, x.a, x.data || {}, x.cls || ""));
@@ -218,6 +220,6 @@ function seUbStart(me, home) {
 // تحلّ محل صفحة «التنبيهات» السابقة (#alerts يحوَّل إليها). تُعاد قراءة المصدر عند كل عرض، فينعكس أي إجراء فوراً
 if (typeof Pages !== "undefined") {
   Pages.notifications = async () => { const nc = App.needCycle && App.needCycle(); if (nc) return nc; UB.at = 0;
-    return { html: h`<div id="ubHost"></div>`, after: (v) => ubPage(v.querySelector("#ubHost"), "التقويم المدرسي الذكي") }; };
-  Pages.alerts = async () => { location.replace("#notifications"); return h``; };
+    return { html: App.raw('<div id="ubHost"></div>'), after: (v) => ubPage(v.querySelector("#ubHost"), "التقويم المدرسي الذكي") }; };
+  Pages.alerts = async () => { location.replace("#notifications"); return App.raw(""); };
 }
