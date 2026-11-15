@@ -177,7 +177,10 @@ function ubSetName(name, home) {
 // يُدرج الشريط في #subbar عند تحميل الصفحة (فيعمل معه معالج الخروج #out في admin.js)، ثم يُكمَل الاسم والإشعارات بعد الدخول.
 (function () {
   const w = document.querySelector("#subbar .who"); if (!w) return;
-  w.innerHTML = '<span id="who" hidden></span>' + ubBarHTML("", "#");
+  // الشريط وحده في #subbar. اسم المستخدم الطويل وصورته يكتبهما drawWho في #who، فيبقى #who خارج الشريط ومخفياً
+  // (قاعدة «#subbar #who» في admin.css تفرض إظهاره داخل الشريط)
+  w.innerHTML = ubBarHTML("", "#");
+  if (!document.getElementById("who")) { const k = document.createElement("span"); k.id = "who"; k.style.display = "none"; k.setAttribute("aria-hidden", "true"); document.body.appendChild(k); }
 })();
 const SE_UB_ICO = { task: "clock", cal: "cal", mega: "alert", note: "file", clip: "file", visit: "eye", users: "user", flag: "alert", doc: "file", user: "user" };
 function seUbStart(me, home) {
