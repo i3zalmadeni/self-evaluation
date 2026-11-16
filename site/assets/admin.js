@@ -219,7 +219,7 @@ function seKit(me) {
   if (home !== kitHome) {
     kitHome = home;
     PK.mountAnnouncements({ sb, system: 'self_evaluation', page: home ? 'home' : 'all', before: '#pghead' });
-    if (home) { const st = S.staff.find(x => x.id === S.me.staff_id); PK.welcome('#pghead', { mode: 'before', sb, name: (st && st.full_name) || kitMe.display_name || '', role: L.role[role()] || '' }); }
+    if (home) { const st = S.staff.find(x => x.id === S.me.staff_id); PK.welcome('#pghead', { mode: 'after', sb, name: (st && st.full_name) || kitMe.display_name || '', role: L.role[role()] || '' }); }
     else document.querySelectorAll('.pk-wcw').forEach(e => e.remove());
   }
   if (hs[0] === 'platform' && (role() === 'coordinator' || role() === 'principal')) { if (!document.querySelector('.pk-admwrap')) PK.mountAdminSection({ sb, system: 'self_evaluation', central: true, after: '#view' }); }
