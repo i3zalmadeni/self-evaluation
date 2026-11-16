@@ -66,6 +66,7 @@ async function boot() {
   (App.drawWho || (() => put($('#who'), h`${me.display_name || ''} · ${L.role[me.role]}`)))();
   route();
   seUbStart(me, role() === 'team_member' ? '#desk' : '#dashboard');
+  seKit(me);
   App.alerts().then(drawMenu).catch(() => {});
 }
 // صفحة من ليس عضواً في فريق التقويم: لوحة بلا قائمة ولا دورات، ورسالة واضحة بدل إخراجه من حسابه
@@ -209,7 +210,21 @@ $('#out').onclick = async () => { S.me = null; S.denied = false; await sb.auth.s
 sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT' && (S.me || S.denied)) { S.me = null; S.denied = false; showLogin(); } });
 window.addEventListener('offline', () => toast('لا يوجد اتصال بالإنترنت: لن تُحفظ التعديلات حتى يعود', true));
 window.addEventListener('online', () => { toast('عاد الاتصال'); App.refresh?.(); });
-window.addEventListener('hashchange', () => route());
+window.addEventListener('hashchange', () => { route(); seKit(); });
+// الحزمة الموحدة: شريط الإعلانات وبطاقة الترحيب في الصفحة الرئيسية وإدارة الإعلانات في إدارة البوابة
+let kitMe = null, kitHome = null;
+function seKit(me) {
+  if (!window.PK) return; kitMe = me || kitMe; if (!kitMe || S.denied) return;
+  const hs = location.hash.slice(1).split('/'), home = !hs[0] || hs[0] === 'dashboard' || hs[0] === 'desk';
+  if (home !== kitHome) {
+    kitHome = home;
+    PK.mountAnnouncements({ sb, system: 'self_evaluation', page: home ? 'home' : 'all', before: '#pghead' });
+    if (home) { const st = S.staff.find(x => x.id === S.me.staff_id); PK.welcome('#pghead', { mode: 'before', sb, name: (st && st.full_name) || kitMe.display_name || '', role: L.role[role()] || '' }); }
+    else document.querySelectorAll('.pk-wcw').forEach(e => e.remove());
+  }
+  if (hs[0] === 'platform' && (role() === 'coordinator' || role() === 'principal')) { if (!document.querySelector('.pk-admwrap')) PK.mountAdminSection({ sb, system: 'self_evaluation', central: true, after: '#view' }); }
+  else document.querySelectorAll('.pk-admwrap').forEach(e => e.remove());
+}
 // الشريط العلوي (الشعار) يختفي عند التمرير ويبقى شريط الأقسام وترويسة الصفحة ثابتَين
 const setHH = () => { const hh = $('.astick header')?.offsetHeight || 0, st = document.documentElement.style; st.setProperty('--hh', hh + 'px'); st.setProperty('--sh', Math.max(0, ($('.astick')?.offsetHeight || 0) - hh) + 'px'); };
 if (window.ResizeObserver && $('.astick')) new ResizeObserver(setHH).observe($('.astick'));
