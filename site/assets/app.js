@@ -426,7 +426,7 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-ev]'
 
 function login() {
   if (session) { location.href = 'admin.html'; return; }   // كان هنا تسجيل خروج: فمن ليس في الفريق كان يُخرج من حسابه عند الضغط على «لوحة التحكم»
-  view.innerHTML = `<div class="panel" style="max-width:480px;margin-inline:auto">${App.loginFormHTML('تسجيل الدخول · التقويم المدرسي الذكي')}</div>`;
+  view.innerHTML = `<div class="panel" style="max-width:480px;margin-inline:auto">${App.loginFormHTML('التقويم المدرسي الذكي')}</div>`;
   $('#lf').onsubmit = async e => {
     e.preventDefault();
     const { error } = await App.signIn($('#le').value, $('#lp').value);

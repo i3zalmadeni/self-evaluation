@@ -108,7 +108,7 @@ const LOGIN_MSG = {
 };
 function showLogin(code = '') {
   $('#shell').hidden = true; const el = $('#login'); el.hidden = false;
-  put(el, h`<div class="login"><div class="pn">${raw(App.loginFormHTML('تسجيل الدخول · لوحة التقويم المدرسي الذكي', LOGIN_MSG[code] || ''))}
+  put(el, h`<div class="login"><div class="pn">${raw(App.loginFormHTML('التقويم المدرسي الذكي', LOGIN_MSG[code] || ''))}
     <p class="muted" style="margin-top:12px"><a href="./">العودة إلى الموقع العام</a></p></div></div>`);
   $('#lf').onsubmit = async e => {
     e.preventDefault();
