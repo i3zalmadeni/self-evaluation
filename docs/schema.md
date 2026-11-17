@@ -18,7 +18,7 @@
 | `se_indicator_assignments` | id, cycle_id, indicator_id, staff_id, role_kind, created_at |
 | `se_evaluations` | id, cycle_id, indicator_id, level_id, status, justification, gaps_notes, evaluated_by, approved_by, approved_at, created_at, updated_at, achievement_pct, strengths |
 | `se_suggested_evidence` | id, indicator_id, kind, title, description, sort_order, created_by, created_at, updated_at |
-| `se_evidence` | id, cycle_id, indicator_id, title, description, status, submitted_by, review_note, reviewed_by, reviewed_at, created_at, updated_at |
+| `se_evidence` | id, cycle_id, indicator_id, title, description, status, submitted_by, review_note, reviewed_by, reviewed_at, created_at, updated_at, evidence_date, category |
 | `se_evidence_files` | id, evidence_id, storage_path, file_name, mime_type, size_bytes, uploaded_by, created_at |
 | `se_meetings` | id, cycle_id, title, meeting_date, start_time, location, status, domain_id, standard_id, indicator_id, created_by, created_at |
 | `se_meeting_agenda_items` | id, meeting_id, title, responsible_staff_id, minutes_allocated, sort_order |

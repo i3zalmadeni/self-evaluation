@@ -3,7 +3,22 @@
 const { sb, h, raw, $, put, S, L, lab, opts, nf, dt, dtt, today, codeCmp, staffName, staffOpts, toast, run, must, ask, sure, badge, sb_, table, btn, pageHead, panel, isCoord, role, canReview, csv } = App;
 const F = { dom: '', st: '', mine: false, q: '' };
 App.indFilter = o => Object.assign(F, { dom: '', st: '', mine: false, q: '' }, o);
-const MIME_OK = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+// أنواع ملفات الشواهد المسموحة (تطابق إعداد مساحة التخزين se-evidence وقيود الجدول): الامتداد ← نوع MIME
+const EV_MIME = { pdf: 'application/pdf', doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', xls: 'application/vnd.ms-excel', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
+const EV_MAX = 10485760, EV_TYPES_TXT = 'PDF أو Word أو Excel أو صورة (JPG، PNG، WebP)';
+// أنواع الشواهد (تُحفظ في عمود التصنيف category)
+const EV_KINDS = ['تقرير', 'محضر', 'سجل', 'خطة', 'قرار أو تعميم', 'نموذج', 'صورة', 'أخرى'];
+// رسالة واضحة لسبب فشل إضافة الشاهد أو رفع ملفه
+const upErr = e => {
+  const m = String(e?.message || e || ''), c = String(e?.code || '') + ' ' + String(e?.statusCode || e?.status || '');
+  if (/غير منطبق/.test(m)) return m;
+  if (/row-level security|unauthorized|not authorized/i.test(m) || /42501|403/.test(c)) return 'لا تملك صلاحية إضافة شاهد على هذا المؤشر. الإضافة متاحة للمسؤول عن المؤشر ومقيّمه ومنسق التقويم، وفي دورة نشطة فقط.';
+  if (/mime|not supported/i.test(m) || /415/.test(c)) return 'نوع الملف غير مسموح. الأنواع المسموحة: ' + EV_TYPES_TXT + '.';
+  if (/maximum allowed size|too large|exceeded/i.test(m) || /413/.test(c)) return 'حجم الملف أكبر من الحد المسموح (10 ميغابايت).';
+  if (/jwt|token/i.test(m) || /401/.test(c)) return 'انتهت جلسة الدخول. سجّل الدخول من جديد ثم أعد المحاولة.';
+  if (/failed to fetch|networkerror|load failed|network|timeout/i.test(m)) return 'انقطع الاتصال أثناء الرفع. تحقق من الإنترنت ثم أعد المحاولة.';
+  return App.errMsg(e);
+};
 
 // المؤشرات المسندة لي (مباشرة أو عبر المجال) كمقيّم أو مسؤول
 async function myIndicators() {
@@ -77,7 +92,7 @@ Pages.ind = async ([id]) => {
   const resp = ia.filter(a => a.kind === 'responsible'), evalr = ia.filter(a => a.kind === 'evaluator');
   const dResp = da.filter(a => a.kind === 'responsible'), dEval = da.filter(a => a.kind === 'evaluator');
   const iEvaluate = isCoord() || role() === 'principal' || evalr.some(a => a.staff_id === S.me.staff_id) || dEval.some(a => a.staff_id === S.me.staff_id);
-  const canUpload = ['coordinator', 'team_member'].includes(role());
+  const canUpload = role() === 'coordinator' || (role() === 'team_member' && [...ia, ...da].some(a => a.staff_id === S.me.staff_id));
   const cyc = App.cycle();
   const names = l => l.length ? l.map(a => staffName(a.staff_id)).join('، ') : '—';
   // حفظ دوال المعالجة المرتبطة بهذا المؤشر
@@ -148,37 +163,46 @@ Pages.ind = async ([id]) => {
   };
   Act.iwLevel = ({ l }) => { const lv0 = levels.find(x => x.id === l), inp = $('#iw-pct'); if (!lv0 || !inp) return; const cur = inp.value === '' ? null : Number(inp.value); if (!cur && cur !== 0 || !(cur >= lv0.min && (cur < lv0.max || (lv0.max === 100 && cur <= 100)))) inp.value = lv0.min; sync(); inp.focus(); };
   Act.iwSave = ({ s }) => save(s);
-  Act.iwUp = ({ i }) => { const x = se.find(y => y.id === i); return evAdd(id, { title: x?.title, description: x?.description }); };
+  Act.iwUp = () => evAdd(id);
   Act.iwVisit = () => App.indVisit(id, model.planned);
   Act.iwTask = () => App.taskForm({ indicator_id: id });
   return { html: App.indWork(model), after: v => { sync(); v.querySelector('#iw-pct')?.addEventListener('input', sync); } };
 };
 
-// ===== رفع الشواهد =====
-async function evAdd(iid, pre = {}) {
-  const ref = await App.ref();
+// ===== إضافة شاهد: نموذج مختصر (الاسم، النوع، الملف) =====
+// يُنشأ سجل الشاهد أولاً (سياسة التخزين تشترط وجوده)، ثم يُرفع الملف ويُسجَّل؛ وأي فشل بعد ذلك يتراجع عن السجل حتى لا يبقى شاهد بلا ملف.
+async function evAdd(iid) {
+  const cyc = App.cycle();
+  if (!cyc || cyc.status !== 'active') return toast('إضافة الشواهد متاحة في الدورة النشطة فقط.', true);
   const f = [];
-  if (!iid) f.push({ k: 'indicator_id', l: 'المؤشر', t: 'select', req: 1, o: ref.inds.map(i => [i.id, `${i.code} — ${App.short(i.official_text, 50)}`]) });
-  f.push({ k: 'title', l: 'عنوان الشاهد', req: 1 }, { k: 'description', l: 'الوصف', t: 'textarea', rows: 3 }, { k: 'category', l: 'التصنيف', ph: 'سجل، تقرير، صورة…' },
-    { k: 'evidence_date', l: 'تاريخ الشاهد', t: 'date' }, { k: 'external_url', l: 'رابط خارجي (اختياري)', t: 'url' },
-    { k: 'files', l: 'الملفات', t: 'file', multiple: 1, accept: '.pdf,.doc,.docx,.xls,.xlsx', hint: 'PDF أو Word أو Excel، حتى 5 ميغابايت للملف' });
-  const v = await ask('رفع شاهد', f, pre, { submit: 'رفع', wide: true }); if (!v) return;
-  const files = v.files || [];
-  for (const x of files) { if (!MIME_OK.includes(x.type)) return toast(`نوع الملف غير مدعوم: ${x.name}`, true); if (x.size > 5242880) return toast(`الملف أكبر من 5 ميغابايت: ${x.name}`, true); }
-  if (!files.length && !v.external_url) return toast('أرفق ملفاً أو أدخل رابطاً', true);
-  const eid = crypto.randomUUID(), ind = iid || v.indicator_id;
-  const { files: _f, indicator_id: _i, ...meta } = v;
-  if (!await run(sb.from('evidence').insert({ ...meta, id: eid, cycle_id: S.cid, indicator_id: ind, uploaded_by: S.me.id, status: 'new' }))) return;
-  let ok = 0;
-  for (const x of files) {
-    const ext = (x.name.split('.').pop() || 'bin').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const path = `${eid}/${crypto.randomUUID()}.${ext}`;
-    const up = await sb.storage.from('se-evidence').upload(path, x, { contentType: x.type });
-    if (up.error) { toast('فشل رفع ' + x.name + ': ' + up.error.message, true); continue; }
-    const r = await sb.from('evidence_files').insert({ evidence_id: eid, storage_path: path, file_name: x.name, mime_type: x.type, size_bytes: x.size });
-    if (r.error) { toast(App.errMsg(r.error), true); continue; } ok++;
+  if (!iid) {
+    const ref = await App.ref(); let inds = ref.inds;
+    if (role() !== 'coordinator') { const mine = await myIndicators(); inds = inds.filter(i => mine.has(i.id)); }
+    if (!inds.length) return toast('لا توجد مؤشرات مرتبطة بحسابكم لإضافة شاهد عليها.', true);
+    f.push({ k: 'indicator_id', l: 'المؤشر', t: 'select', req: 1, o: inds.map(i => [i.id, `${i.code} — ${App.short(i.official_text, 50)}`]) });
   }
-  toast(`رُفع الشاهد (${nf(ok)} ملف)`); App.refresh();
+  f.push({ k: 'title', l: 'اسم الشاهد', req: 1, ph: 'عنوان مختصر يعرّف بالشاهد' },
+    { k: 'category', l: 'نوع الشاهد', t: 'select', req: 1, o: EV_KINDS.map(k => [k, k]) },
+    { k: 'files', l: 'إرفاق الملف', t: 'file', req: 1, accept: '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp', hint: EV_TYPES_TXT + '، حتى 10 ميغابايت' });
+  const v = await ask('إضافة شاهد', f, {}, { submit: 'إضافة الشاهد' }); if (!v) return;
+  const x = (v.files || [])[0]; if (!x) return toast('اختر ملف الشاهد.', true);
+  const ext = (x.name.includes('.') ? x.name.split('.').pop() : '').toLowerCase(), mime = EV_MIME[ext];
+  if (!mime) return toast(`نوع الملف غير مسموح: ${x.name}. الأنواع المسموحة: ${EV_TYPES_TXT}.`, true);
+  if (!x.size) return toast('الملف فارغ ولا يمكن رفعه.', true);
+  if (x.size > EV_MAX) return toast(`حجم الملف ${nf(Math.ceil(x.size / 1048576))} ميغابايت، والحد المسموح 10 ميغابايت.`, true);
+  if (!navigator.onLine) return toast('لا يوجد اتصال بالإنترنت. أعد المحاولة عند عودة الاتصال.', true);
+  const eid = crypto.randomUUID(), ind = iid || v.indicator_id, path = `${eid}/${crypto.randomUUID()}.${ext}`;
+  toast('جارٍ رفع الملف…');
+  const ins = await sb.from('evidence').insert({ id: eid, cycle_id: S.cid, indicator_id: ind, title: v.title, category: v.category, evidence_date: today(), uploaded_by: S.me.staff_id, status: 'new' });
+  if (ins.error) { console.error(ins.error); return toast('تعذّرت إضافة الشاهد: ' + upErr(ins.error), true); }
+  const undo = async () => { try { await sb.storage.from('se-evidence').remove([path]); } catch {} await sb.from('evidence').delete().eq('id', eid); };
+  // بعض الأجهزة (آيباد خصوصاً) ترسل الملف بلا نوع أو بنوع مختلف، فيرفضه التخزين: يُثبَّت النوع بحسب الامتداد
+  const body = x.type === mime ? x : new Blob([x], { type: mime });
+  let up; try { up = await sb.storage.from('se-evidence').upload(path, body, { contentType: mime, upsert: false }); } catch (e) { up = { error: e }; }
+  if (up.error) { console.error(up.error); await undo(); return toast('لم يكتمل رفع الملف: ' + upErr(up.error), true); }
+  const r = await sb.from('evidence_files').insert({ evidence_id: eid, storage_path: path, file_name: x.name, mime_type: mime, size_bytes: x.size, uploaded_by: S.me.staff_id });
+  if (r.error) { console.error(r.error); await undo(); return toast('رُفع الملف لكن تعذّر تسجيله فأُلغيت العملية: ' + upErr(r.error), true); }
+  toast('أُضيف الشاهد ورُفع ملفه بنجاح'); App.refresh();
 }
 Act.evView = ({ id, t }) => App.openViewer(id, t, true);
 Act.evReview = async ({ id }) => {
@@ -205,10 +229,10 @@ Pages.evidence = async () => {
   if (EF.st) q = q.eq('status', EF.st);
   const ev = await must(q);
   Act.evAddAny = () => evAdd(null);
-  const html = h`${pageHead('الشواهد', ['coordinator', 'team_member'].includes(role()) ? btn('+ رفع شاهد', 'evAddAny', {}, 'pri') : '')}
+  const html = h`${pageHead('الشواهد', ['coordinator', 'team_member'].includes(role()) ? btn('+ إضافة شاهد', 'evAddAny', {}, 'pri') : '')}
   <div class="flt"><select id="efSt" aria-label="حالة الشاهد"><option value="">كل الحالات</option>${Object.entries(L.evid).map(([k, v]) => h`<option value="${k}" ${EF.st === k ? raw('selected') : ''}>${v}</option>`)}</select></div>
   <div class="pn">${table([
-    { h: 'المؤشر', f: e => h`<a href="#ind/${e.indicator_id}" dir="ltr">${ref.im[e.indicator_id]?.code || '—'}</a>` }, { h: 'الشاهد', f: e => h`<b>${e.title}</b>` },
+    { h: 'المؤشر', f: e => h`<a href="#ind/${e.indicator_id}" dir="ltr">${ref.im[e.indicator_id]?.code || '—'}</a>` }, { h: 'الشاهد', f: e => h`<b>${e.title}</b>` }, { h: 'النوع', f: e => e.category || '—' },
     { h: 'رفعه', f: e => dtt(e.created_at) }, { h: 'الملفات', f: e => nf(e.evidence_files.length) }, { h: 'الحالة', f: e => sb_('evid', e.status) },
     { h: '', f: e => h`<div class="chips">${btn('معاينة', 'evView', { id: e.id, t: e.title })}${canReview() ? btn('مراجعة', 'evReview', { id: e.id }) : ''}</div>` },
   ], ev, 'لا توجد شواهد')}</div>`;

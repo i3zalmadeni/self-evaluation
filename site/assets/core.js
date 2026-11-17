@@ -151,7 +151,7 @@ async function openViewer(evidenceId, title, canDownload = true) {
     $$('.vtabs button', box).forEach((b, j) => b.classList.toggle('pri', i === j));
     const f = files[i]; put(bar, ''); put(stage, h`<p class="muted">جارٍ تحميل الملف…</p>`);
     const dl = await sb.storage.from('se-evidence').download(f.storage_path);
-    if (dl.error) { put(stage, h`<p class="err">تعذّر فتح الملف (الصلاحية أو الاتصال).</p>`); return; }
+    if (dl.error) { console.error(dl.error); put(stage, h`<p class="err">تعذّر فتح الملف «${f.file_name}». تأكد من الاتصال بالإنترنت ومن صلاحيتك على هذا المؤشر ثم أعد المحاولة.</p>`); return; }
     const blob = dl.data, url = URL.createObjectURL(blob);
     const dlBtn = canDownload ? `<a class="btn sm" href="${url}" download="${esc(f.file_name)}">تنزيل</a>` : '';
     if ((f.mime_type || '').startsWith('image/')) {

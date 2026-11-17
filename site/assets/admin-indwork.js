@@ -79,11 +79,11 @@ App.indWork = d => {
 
   // 2) الشواهد
   const row = e => h`<li class="iw-ev ${e.status}"><span class="iw-ei">${ic(e.status === 'approved' ? 'check' : fix.includes(e) ? 'edit' : 'clip')}</span><div class="iw-eb"><b>${e.title}</b>${e.indicator_id !== id ? h`<a class="iw-sh" href="#ind/${e.indicator_id}">مشترك من ${d.ref.im[e.indicator_id]?.code || ''}</a>` : ''}
-      <small>${dt(e.evidence_date)} · ${nf(e.evidence_files.length)} ملف${e.external_url ? '' : ''}${e.description ? ' · ' + App.short(e.description, 80) : ''}</small>${e.review_note ? h`<small class="iw-note">${ic('alert')} ${e.review_note}</small>` : ''}${e.external_url ? h`<a href="${e.external_url}" target="_blank" rel="noopener">رابط خارجي</a>` : ''}</div>
+      <small>${e.category ? e.category + ' · ' : ''}${dt(e.evidence_date)} · ${nf(e.evidence_files.length)} ملف${e.external_url ? '' : ''}${e.description ? ' · ' + App.short(e.description, 80) : ''}</small>${e.review_note ? h`<small class="iw-note">${ic('alert')} ${e.review_note}</small>` : ''}${e.external_url ? h`<a href="${e.external_url}" target="_blank" rel="noopener">رابط خارجي</a>` : ''}</div>
     <div class="iw-ea">${sb_('evid', e.status)}${btn('معاينة', 'evView', { id: e.id, t: e.title }, 'sm')}${canReview() ? btn('مراجعة', 'evReview', { id: e.id }, 'sm') : ''}${co && e.indicator_id === id ? btn('حذف', 'evDel', { id: e.id }, 'sm bad') : ''}</div></li>`;
-  const evid = h`<section class="iw-sec" id="s-evid" aria-labelledby="h-evid"><div class="iw-sh2"><h2 id="h-evid">${ic('clip')} ٢ · أرفق الشواهد</h2>${d.canUpload && active ? btn('+ رفع شاهد', 'evAdd', {}, 'pri') : ''}</div>
+  const evid = h`<section class="iw-sec" id="s-evid" aria-labelledby="h-evid"><div class="iw-sh2"><h2 id="h-evid">${ic('clip')} ٢ · أرفق الشواهد</h2>${d.canUpload && active ? btn('+ إضافة شاهد', 'evAdd', {}, 'pri') : ''}</div>
     <div class="iw-meter"><span><b>${nf(ap.length)}</b> معتمد</span><span><b>${nf(pend.length)}</b> قيد المراجعة</span><span class="${fix.length ? 'bad' : ''}"><b>${nf(fix.length)}</b> يحتاج استكمالاً</span><i><u style="width:${evAll.length ? ap.length / evAll.length * 100 : 0}%"></u></i></div>
-    ${evAll.length ? h`<ul class="iw-evs">${[...fix, ...pend, ...evAll.filter(e => !fix.includes(e) && !pend.includes(e))].map(row)}</ul>` : h`<p class="muted empty">لم تُرفع شواهد فعلية بعد. ${d.canUpload && active ? 'ابدأ من زر «رفع شاهد» أو من الشواهد المقترحة أعلاه.' : ''}</p>`}</section>`;
+    ${evAll.length ? h`<ul class="iw-evs">${[...fix, ...pend, ...evAll.filter(e => !fix.includes(e) && !pend.includes(e))].map(row)}</ul>` : h`<p class="muted empty">لم تُرفع شواهد فعلية بعد. ${d.canUpload && active ? 'ابدأ من زر «إضافة شاهد» أو من الشواهد المقترحة أعلاه.' : ''}</p>`}</section>`;
 
   // 3) التقييم
   const f = k => ev?.[k] ?? '';
