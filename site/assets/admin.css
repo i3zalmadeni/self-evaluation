@@ -270,7 +270,7 @@ body.busy #lbar::after{content:"";position:absolute;inset-block:0;inset-inline-s
 .cmp-t{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0 12px}
 .ms{padding:10px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--line)} .ms b{display:block;font-size:1.35rem;line-height:1.2;color:var(--ink);font-variant-numeric:tabular-nums} .ms small{color:var(--muted);font-size:.8rem}
 .ms.ok b{color:var(--c4f)} .ms.warn b{color:var(--c3f)} .ms.bad b{color:var(--c5f)} .ms.info b{color:var(--c1f)}
-.cmp-d{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.cmp-d{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:10px}
 .cd{display:grid;gap:6px;padding:12px 14px;border-radius:16px;background:var(--b);border:1px solid color-mix(in srgb,var(--f) 22%,var(--line));text-decoration:none;color:var(--ink);transition:transform .15s,box-shadow .15s}
 .cd:hover{transform:translateY(-2px);box-shadow:var(--shadow2)} .cd b{color:var(--f)} .cd small{color:var(--muted)} .cd.done small{color:var(--c4f);font-weight:700} .cd .mp-bar{width:100%}
 .wins{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px;align-items:start}
@@ -323,7 +323,7 @@ a.np:hover{filter:brightness(.97);box-shadow:var(--shadow)}
 .win{align-content:start} .win>.ns{align-self:end}
 /* ===== نافذة التقويم والأجندة ===== */
 .wins .w-cal{grid-column:1/-1}
-.wc{display:grid;grid-template-columns:minmax(290px,360px) 1fr;gap:18px;align-items:start}
+.wc{display:grid;grid-template-columns:minmax(min(290px,100%),360px) 1fr;gap:18px;align-items:start}
 .calbox{padding:12px;border:1px solid var(--line);border-radius:20px;background:var(--soft)}
 .cal-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px} .cal-h b{font-size:1rem} .cal-h .btn .ico{width:14px;height:14px}
 .cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center} .cw{font-size:.74rem;color:var(--muted);font-weight:700;padding:4px 0}
@@ -599,7 +599,7 @@ button.kc{font:inherit;text-align:start;cursor:pointer;width:100%} .kc.on{outlin
 @media (prefers-reduced-motion:reduce){.desk3 .db-it.tk,.ix{transition:none}.desk3 .db-it.tk:hover,.ix:hover{transform:none}}
 
 /* التقويم والأجندة في مكتبي */
-.desk3 .w-cal .wc{gap:22px;grid-template-columns:minmax(290px,350px) minmax(0,1fr)}
+.desk3 .w-cal .wc{gap:22px;grid-template-columns:minmax(min(290px,100%),350px) minmax(0,1fr)}
 .desk3 .calbox{padding:16px;border-radius:22px;border:1px solid color-mix(in srgb,var(--line) 70%,transparent);background:linear-gradient(160deg,color-mix(in srgb,var(--brand) 6%,var(--surface)),var(--soft))}
 .desk3 .agbox .ag-h h3{font-size:1.05rem;font-weight:800}
 .desk3 .tm-day{margin:0 0 16px}.desk3 .tm-day:last-child{margin-bottom:0}
@@ -744,7 +744,7 @@ button.kc{font:inherit;text-align:start;cursor:pointer;width:100%} .kc.on{outlin
 .hm-dc{display:flex;flex-wrap:wrap;gap:8px 18px;margin:2px 0 10px;font-size:.86rem;color:var(--muted)}
 .hm-dc span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:6px;vertical-align:-1px;background:var(--c1f)}
 .hm-dc .approved::before{background:var(--c4f)}.hm-dc .draft::before{background:var(--c3f)}.hm-dc .not_evaluated::before{background:color-mix(in srgb,var(--f) 25%,var(--line))}
-.hm-s{display:grid;grid-template-columns:minmax(200px,32%) minmax(0,1fr);gap:8px 22px;align-items:center;padding:14px 0}
+.hm-s{display:grid;grid-template-columns:minmax(min(200px,100%),32%) minmax(0,1fr);gap:8px 22px;align-items:center;padding:14px 0}
 .hm-sh{display:grid;gap:6px;margin:0}.hm-sh .hm-bar{margin:0}
 .hm-cs{gap:8px}.hm-c{padding:9px 14px;font-size:.95rem}
 @media (max-width:760px){.hm-s{grid-template-columns:minmax(0,1fr)}.hm-d{padding:16px}}

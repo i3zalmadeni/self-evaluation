@@ -43,7 +43,7 @@ html{scroll-behavior:smooth}
 .rt{fill:none;stroke:var(--soft);stroke-width:10}
 .rf{fill:none;stroke:var(--lc);stroke-width:10;stroke-linecap:round;stroke-dasharray:0 100;transform:rotate(-90deg);transform-origin:50px 50px;transition:stroke-dasharray 1.3s cubic-bezier(.2,.8,.2,1)}
 .in .rf{stroke-dasharray:var(--v) 100}
-.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px 20px;margin:0}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:12px 20px;margin:0}
 .meta div{padding:10px 14px;border-radius:14px;background:var(--soft)} .meta dt{color:var(--muted);font-size:.8rem} .meta dd{margin:2px 0 0;font-weight:700}
 /* المؤشرات الرئيسية */
 .kpis2{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
@@ -107,7 +107,7 @@ html{scroll-behavior:smooth}
 .blt b{display:block;margin-bottom:4px} .blt ul{margin:0;padding-inline-start:20px;display:grid;gap:4px;line-height:1.8}
 .pcts{font-weight:700;color:var(--lc);font-variant-numeric:tabular-nums}
 /* نقاط القوة */
-.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:10px}
 .sc{display:grid;grid-template-columns:62px 1fr;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;border:1px solid color-mix(in srgb,var(--c4f) 25%,var(--line));background:linear-gradient(160deg,var(--c4b),var(--surface) 130%);transition:transform .15s,box-shadow .15s}
 .sc:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
 .sc .rng{display:block;position:relative;width:62px;height:62px} .sc .rng b{position:absolute;inset:0;display:grid;place-items:center;font-size:.8rem;color:var(--c4f);font-variant-numeric:tabular-nums} .sc span{font-size:.92rem;line-height:1.6}
@@ -137,11 +137,11 @@ html{scroll-behavior:smooth}
 }
 /* إضافات خاصة بصفحة التقويم الخارجي */
 .srow.two{grid-template-columns:104px 1fr}
-.stkg{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.stkg{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:12px}
 .stkc{border:1px solid var(--line);border-inline-start:5px solid var(--lc);border-radius:18px;padding:14px 16px;background:linear-gradient(90deg,var(--lb),transparent 60%),var(--surface)}
 .stkc h3{margin:0 0 6px;font-size:1rem} .stkc .ref{font-size:.8rem;color:var(--muted);margin-top:6px}
 .notes{margin:0;padding-inline-start:22px;display:grid;gap:8px;line-height:1.9}
-.lvt{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin:8px 0}
+.lvt{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));margin:8px 0}
 .lvt div{padding:10px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--lc) 35%,var(--line));background:var(--lb)} .lvt b{display:block;color:var(--lc)} .lvt span{font-size:.88rem;color:var(--ink2)}
 .txt{margin:0;line-height:1.95}
 .cardnote{margin-top:6px;font-size:.86rem;color:rgba(255,255,255,.92)}
