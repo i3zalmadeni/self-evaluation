@@ -312,7 +312,7 @@ main h3.sec{margin-top:26px;padding-inline-start:12px;border-inline-start:5px so
     photoP = (async () => {
       try {
         const r = await sb.rpc("core_my_photo"), ph = r && r.data; if (!ph || !ph.path) return null;
-        if (ph.public) return `${sb.supabaseUrl}/storage/v1/object/public/${ph.bucket}/${ph.path.split("/").map(encodeURIComponent).join("/")}`;
+        if (ph.public) return `${sb.supabaseUrl || (window.APP_CONFIG && APP_CONFIG.supabaseUrl) || ""}/storage/v1/object/public/${ph.bucket}/${ph.path.split("/").map(encodeURIComponent).join("/")}`;
         const s = await sb.storage.from(ph.bucket).createSignedUrl(ph.path, 3600); return (s && s.data && s.data.signedUrl) || null;
       } catch (_) { return null; }
     })();
