@@ -60,7 +60,7 @@ async function boot() {
     sb.from('staff').select('*').order('full_name'),
     sb.from('team_members').select('staff_id,is_active'),
   ]);
-  S.cycles = cyc.data || []; S.staff = stf.data || []; S.team = new Set((tm.data || []).filter(x => x.is_active).map(x => x.staff_id));
+  S.cycles = cyc.data || []; S.staff = stf.data || []; await App.mergeContact(); S.team = new Set((tm.data || []).filter(x => x.is_active).map(x => x.staff_id));
   const saved = (() => { try { return localStorage.getItem('cyc'); } catch { return null; } })();
   S.cid = S.cycles.find(c => c.id === saved)?.id || (S.cycles.find(c => c.status === 'active') || S.cycles[0])?.id || null;
   drawCycles();
@@ -92,7 +92,14 @@ function drawCycles() {
   put($('#cycSel'), h`${S.cycles.length ? S.cycles.map(c => h`<option value="${c.id}" ${c.id === S.cid ? raw('selected') : ''}>${c.name} — ${L.cycle[c.status]}</option>`) : h`<option value="">لا توجد دورة</option>`}`);
 }
 App.reloadCycles = async () => { const r = await sb.from('cycles').select('*').order('created_at', { ascending: false }); S.cycles = r.data || []; if (!S.cycles.find(c => c.id === S.cid)) S.cid = S.cycles[0]?.id || null; drawCycles(); };
-App.reloadStaff = async () => { const [r, t] = await Promise.all([sb.from('staff').select('*').order('full_name'), sb.from('team_members').select('staff_id,is_active')]); S.staff = r.data || []; S.team = new Set((t.data || []).filter(x => x.is_active).map(x => x.staff_id)); };
+// حالة الجوال وموافقة واتساب: من دالة آمنة لا تكشف الرقم، وتُدمج في S.staff (الحقلان phone وwhatsapp_opt_in يعتمد عليهما الإرسال والجاهزية)
+App.mergeContact = async () => {
+  if (!(role() === 'coordinator' || role() === 'principal')) return;
+  const r = await sb.rpc('se_staff_contact_status'); if (r.error || !r.data) return;
+  const m = new Map(r.data.map(x => [x.staff_id, x]));
+  S.staff.forEach(s => { const c = m.get(s.id); if (c) { s.phone = c.has_phone ? 'موجود' : ''; s.whatsapp_opt_in = !!c.wa_opt_in; } });
+};
+App.reloadStaff = async () => { const [r, t] = await Promise.all([sb.from('staff').select('*').order('full_name'), sb.from('team_members').select('staff_id,is_active')]); S.staff = r.data || []; await App.mergeContact(); S.team = new Set((t.data || []).filter(x => x.is_active).map(x => x.staff_id)); };
 
 // الدخول من هذا النظام نفسه بمعرّف حساب النواة الرقمية. الجلسة مشتركة مع بقية الأنظمة على الأصل نفسه.
 const LOGIN_MSG = {

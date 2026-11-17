@@ -116,7 +116,7 @@ Pages.assign = async (a) => {
   const sid = a[0] || '';
   let mine = [];
   if (sid) mine = (await must(sb.from('staff_responsibilities').select('*').eq('cycle_id', S.cid).eq('staff_id', sid))).sort((x, y) => codeCmp(x.code, y.code));
-  const chips = (list, kind, iid) => h`<div class="chips">${list.filter(x => x.kind === kind).map(x => h`<span class="chip2">${App.pcell(x.staff_id, 20)}${x.due_date ? h` <small>${dt(x.due_date)}</small>` : ''} <button data-a="asDel" data-t="indicator_assignments" data-id="${x.id}" aria-label="إزالة">✕</button></span>`)}${btn('+', 'asAdd', { iid, kind })}</div>`;
+  const chips = (list, kind, iid) => h`<div class="chips">${list.filter(x => x.kind === kind).map(x => h`<span class="chip2">${App.pcell(x.staff_id, 20)}${x.due_date ? h` <small>${dt(x.due_date)}</small>` : ''} <button data-a="asDel" data-t="indicator_assignments" data-id="${x.id}" aria-label="إزالة" type="button">✕</button></span>`)}${btn('+', 'asAdd', { iid, kind })}</div>`;
   return h`${pageHead('إدارة المسؤوليات')}
   ${panel('ملف مسؤوليات منسوب', h`<div class="flt"><label>المنسوب <select id="asPick"><option value="">اختر…</option>${S.staff.map(s => h`<option value="${s.id}" ${s.id === sid ? raw('selected') : ''}>${s.full_name}</option>`)}</select></label></div>
     ${sid ? h`<h3 style="margin:8px 0">${staffName(sid)}: ${nf(mine.length)} مؤشراً</h3>${table([
@@ -145,7 +145,14 @@ Act.asAdd = async ({ iid, kind }) => {
   const v = await ask(kind === 'evaluator' ? 'إضافة مقيّم' : 'إضافة مسؤول', f); if (!v) return;
   if (await run(sb.from('indicator_assignments').insert({ ...v, cycle_id: S.cid, indicator_id: iid, kind }), 'تم الإسناد')) App.refresh();
 };
-Act.asDel = async ({ t, id }) => { if (await sure('إزالة هذا الإسناد؟') && await run(sb.from(t).delete().eq('id', id), 'أُزيل')) App.refresh(); };
+// الحذف يتحقق من أن الصف المطلوب حُذف فعلاً (القاعدة قد لا ترجع خطأً عند رفض الصلاحية بل 0 صف)، ثم يحدّث القائمة دائماً
+Act.asDel = async ({ t, id }) => {
+  if (!await sure('إزالة هذا الإسناد؟')) return;
+  const r = await sb.from(t).delete().eq('id', id).select('id');
+  if (r.error) { toast(App.errMsg(r.error), true); return; }
+  if (!r.data || !r.data.length) toast('لم يُحذف الإسناد: ربما حُذف مسبقاً أو لا تملك صلاحية الحذف. حُدّثت القائمة.', true); else toast('أُزيل');
+  App.refresh();
+};
 Act.asCsv = async ({ sid }) => {
   const rs = await must(sb.from('staff_responsibilities').select('*').eq('cycle_id', S.cid).eq('staff_id', sid));
   csv('مسؤوليات-' + staffName(sid), [{ h: 'الرمز', x: r => r.code }, { h: 'نص المؤشر', x: r => r.official_text }, { h: 'الدور', x: r => L.kind[r.kind] }], rs.sort((a, b) => codeCmp(a.code, b.code)));
