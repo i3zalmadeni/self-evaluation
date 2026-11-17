@@ -25,7 +25,7 @@ const L = {
   visit: { planned: 'مخططة', done: 'تمت', cancelled: 'ملغاة' },
   follow: { open: 'مفتوحة', in_progress: 'قيد المتابعة', closed: 'مغلقة' },
   prio: { normal: 'عادي', important: 'مهم', urgent: 'عاجل' },
-  role: { coordinator: 'منسق التقويم', team_member: 'عضو فريق', principal: 'قائد المدرسة' },
+  role: { coordinator: 'منسق التقويم', team_member: 'عضو فريق', member: 'منسوب', principal: 'قائد المدرسة' },
   kind: { responsible: 'مسؤول', evaluator: 'مقيّم' },
   wa: { queued: 'في الانتظار', sent: 'أُرسلت', delivered: 'وصلت', failed: 'فشلت', skipped: 'تُجوهلت' },
 };

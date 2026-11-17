@@ -61,7 +61,7 @@ async function load() {
     soft(sb.from('announcements').select('id,title,body,priority,audience,publish_at,expires_at').order('publish_at', { ascending: false }).limit(40)),
     soft(sb.from('announcement_reads').select('announcement_id,profile_id,read_at')),
     vis.length ? soft(sb.from('visit_cards').select('id,visit_id,indicator_id,followup,due_date,responsible_staff_id,required_actions,recommendations').in('visit_id', vis.map(v => v.id))) : Promise.resolve([]),
-    soft(sb.raw.from('staff_members').select('id,user_id,full_name,is_active,account_status').not('user_id','is',null).then(r => (r.data || []).map(p => ({ id: p.user_id, display_name: p.full_name, staff_id: p.id, is_active: p.is_active && p.account_status === 'active' })))),
+    soft(sb.raw.from('staff_members').select('id,user_id,full_name,is_active,account_status').not('user_id','is',null)).then(rs => rs.map(p => ({ id: p.user_id, display_name: p.full_name, staff_id: p.id, is_active: p.is_active && p.account_status === 'active' }))),
     mgr ? soft(sb.from('activity_log').select('id,actor_id,action,entity_type,new_data,old_data,created_at').order('id', { ascending: false }).limit(12)) : Promise.resolve([]),
   ]);
   const mset = new Set(meetings.map(m => m.id));

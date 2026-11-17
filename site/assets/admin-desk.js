@@ -1,7 +1,7 @@
 /* مكتبي الإلكتروني: مكتب عضو فريق التقويم الشخصي. يحلّ محل «إدارة الفريق» و«إدارة البوابة» لهذا الدور،
    ويجمع مهامه المسندة إليه وما اقترحه ومؤشراته ومواعيده وتقويمه وإعلاناته. تُحمَّل بعد admin-team.js. */
 (() => {
-const { h, S, L, nf, dt, staffName, badge, btn, panel } = App;
+const { h, S, L, nf, dt, staffName, badge, btn, panel, role } = App;
 const MS = 864e5, pad = n => String(n).padStart(2, '0');
 const tod = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
 const dayDiff = s => Math.round((new Date(String(s).slice(0, 10) + 'T00:00:00') - new Date(tod() + 'T00:00:00')) / MS);
@@ -25,6 +25,7 @@ const taskRow = (t, mine) => {
    المصدر هو الارتباطات الفعلية في قاعدة البيانات (إسناد مباشر للمؤشر أو عبر المجال)، وغيابها حالة طبيعية لها رسالتها. */
 App.myInds = D => {
   const me = S.me.staff_id, active = App.cycle()?.status === 'active';
+  if (!D) D = { resp: [], evid: [], om: {}, ref: { im: {} } };
   const of = k => [...new Set((D.resp || []).filter(r => r.staff_id === me && r.kind === k).map(r => r.indicator_id))].map(id => D.ref.im[id]).filter(Boolean)
     .sort((a, b) => String(a.code).localeCompare(String(b.code), undefined, { numeric: true }));
   const rs = of('responsible'), ev = of('evaluator');
@@ -77,6 +78,11 @@ async function overview() {
 }
 
 Pages.desk = async (parts = []) => {
+  if (role() === 'member') {   // منسوب من خارج فريق التقويم: مؤشراته المسندة فقط، أو حالة فارغة واضحة
+    if (!S.cid) return { html: App.myInds(null) };
+    const D = await App.data().catch(() => null);
+    return { html: h`<div class="desk3">${App.myInds(D)}</div>` };
+  }
   const tab = TABS.some(t => t[0] === parts[0]) ? parts[0] : 'overview';
   if (tab === 'tasks') App.taskFilter?.('mine');
   const [r, D] = await Promise.all([tab === 'overview' ? overview() : Pages[tab](parts.slice(1)), S.cid ? App.data().catch(() => null) : null]);

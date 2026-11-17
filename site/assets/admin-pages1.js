@@ -99,7 +99,7 @@ Act.tmWa = async ({ id, v }) => { if (await run(sb.from('whatsapp_optin').upsert
 // صورة المنسوب: الصورة العامة من النواة (حاوية public-photos) لمن وافق على النشر، وإلا الأحرف الأولى
 const avUrl = p => p ? sb.storage.from('public-photos').getPublicUrl(p).data.publicUrl : '';
 const initials = n => { const w = String(n || '؟').trim().split(/\s+/), l = w.length > 1 ? w[w.length - 1].replace(/^ال/, '') : ''; return w[0][0] + (l ? l[0] : ''); };
-App.avatarHtml = (st, size = 40) => h`<span class="av" style="--s:${size}px">${st?.avatar_path ? h`<img src="${avUrl(st.avatar_path)}" alt="" loading="lazy">` : h`<i>${initials(st?.full_name || st?.display_name)}</i>`}</span>`;
+App.avatarHtml = (st, size = 40) => h`<span class="av" style="--s:${size}px"${!st?.avatar_path && (st?.id === S.me?.staff_id || (!st?.id && st?.display_name && st.display_name === S.me?.display_name)) ? raw(' data-me="1"') : ''}>${st?.avatar_path ? h`<img src="${avUrl(st.avatar_path)}" alt="" loading="lazy">` : h`<i>${initials(st?.full_name || st?.display_name)}</i>`}</span>`;
 App.pcell = (id, size = 24) => h`<span class="pcell">${App.avatarHtml(S.staff.find(s => s.id === id) || { full_name: staffName(id) }, size)}<span>${staffName(id)}</span></span>`;
 App.ncell = (n, size = 24) => h`<span class="pcell">${App.avatarHtml(S.staff.find(s => s.full_name === n) || { full_name: n }, size)}<span>${n}</span></span>`;
 const drawWho = () => put($('#who'), h`${App.avatarHtml(S.staff.find(s => s.id === S.me.staff_id) || { display_name: S.me.display_name }, 28)}<span>${S.me.display_name || ''} · ${L.role[S.me.role]}</span>`);
@@ -173,4 +173,11 @@ Pages.systems = async () => {
       extra: h`<small class="muted">يقرأ من النواة: ${(x.scopes || []).map(c => SCOPE[c] || c).join(' · ')}</small>` }); }), 'لا أنظمة مسجّلة.')}</section>
   <p class="muted">يُعيَّن المنسقون من النواة (دور «منسق» مع نطاقه). منسق واحد نشط لكل نطاق. تُسجَّل الأنظمة وتُفعَّل وتُمنح صلاحياتها من النواة الرقمية فقط (مدير النواة). قائمة الصلاحيات القابلة للمنح تشمل الأنظمة المفعّلة وحدها، ويرفض النظام منح صلاحية نظام غير مفعّل. كل نظام يقرأ من النواة ما تتيحه نطاقاته أعلاه ولا يكتب في سجلاتها.</p>`;
 };
+})();
+
+// صورة المستخدم الحالي: من سجل النواة الموحد (مجتمع المعلمين ثم الصورة العامة ثم صورة السجل)، فلا تظهر بطاقته كحساب مستقل بلا صورة
+(() => {
+  const hyd = () => { const as = document.querySelectorAll('.av[data-me]:not([data-done])'); if (!as.length || !window.PK?.photoUrl) return;
+    as.forEach(a => { a.dataset.done = '1'; }); PK.photoUrl(App.sb).then(u => { if (!u) return; as.forEach(a => { const i = new Image(); i.alt = ''; i.onload = () => { a.textContent = ''; a.appendChild(i); }; i.src = u; }); }); };
+  let t = 0; new MutationObserver(() => { clearTimeout(t); t = setTimeout(hyd, 80); }).observe(document.documentElement, { childList: true, subtree: true });
 })();

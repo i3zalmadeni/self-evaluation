@@ -7,7 +7,7 @@ const { sb, h, raw, $, $$, put, S, toast, run, role, isCoord, L } = App;
 const CP = ['coordinator', 'principal'], CPR = ['coordinator', 'principal'];
 // القائمة العلوية: أربعة أقسام رئيسية فقط. الصفحات الداخلية (علامة 1) تُعرض كتبويبات داخل قسمها وتبقى روابطها القديمة تعمل وصلاحياتها كما هي
 const MENU = [
-  ['desk', 'مكتبي الإلكتروني', ['team_member']],      // الصفحة الأساسية لعضو الفريق
+  ['desk', 'مكتبي الإلكتروني', ['team_member', 'member']],      // الصفحة الأساسية لعضو الفريق
   ['dashboard', 'مكتبي الإلكتروني', ['coordinator', 'principal']],
   ['inds', 'إدارة المؤشرات', '*'],
   ['team', 'إدارة الفريق', ['coordinator', 'principal']],
@@ -23,12 +23,13 @@ const MENU = [
 const HUB_OF = { reports: 'dashboard', log: 'dashboard', evidence: 'inds', indmap: 'inds', ind: 'inds', cycles: 'platform', wa: 'platform', staff: 'perms', assign: 'platform', ann: 'platform', tasks: 'team', meetings: 'team', meeting: 'team', visits: 'team', visit: 'team', cal: 'team' };
 const DESKP = ['tasks', 'meetings', 'meeting', 'visits', 'visit', 'cal', 'ann'];
 const hubOf = n => role() === 'team_member' && DESKP.includes(n) ? 'desk' : HUB_OF[n];
+const MEMBER_OK = ['desk', 'ind'];   // المنسوب العادي: مكتبه وصفحة المؤشر المسند إليه فقط
 const allowed = (r) => r === '*' || r.includes(role());
 
 // القائمة العلوية: عناصر قبل أول مجموعة تظهر مباشرة، وكل مجموعة تُفتح كقائمة منسدلة
 const MICON = { dashboard: 'bars', inds: 'note', team: 'users', platform: 'layers', perms: 'lock', desk: 'user' };
 function drawMenu() {
-  const cur0 = location.hash.slice(1).split('/')[0] || (role() === 'team_member' ? 'desk' : 'dashboard'), cur = role() === 'team_member' && (cur0 === 'team' || cur0 === 'platform' || cur0 === 'perms') ? 'desk' : (hubOf(cur0) || cur0);
+  const cur0 = location.hash.slice(1).split('/')[0] || (role() === 'team_member' || role() === 'member' ? 'desk' : 'dashboard'), cur = role() === 'member' ? 'desk' : role() === 'team_member' && (cur0 === 'team' || cur0 === 'platform' || cur0 === 'perms') ? 'desk' : (hubOf(cur0) || cur0);
   const nb = App.hubBadges ? App.hubBadges(App.lastAlerts) : {};
   put($('#menu'), h`${MENU.filter(m => !m[3] && allowed(m[2])).map(m => h`<a href="#${m[0]}" class="${m[0] === cur ? 'on' : ''}" ${m[0] === cur ? raw('aria-current="page"') : ''}>${MICON[m[0]] ? App.ico(MICON[m[0]]) : ''}<span class="ml">${m[1]}</span>${nb[m[0]] ? h` <span class="nb" aria-label="${nb[m[0]]} إجراء">${nb[m[0]] > 99 ? '99+' : App.nf(nb[m[0]])}</span>` : ''}</a>`)}`);
 }
@@ -41,7 +42,8 @@ async function loadMe(uid) {
   const [adm, crd, team, rl] = await Promise.all([sb.raw.rpc('is_core_admin'), sb.raw.rpc('se_is_coordinator'), sb.raw.rpc('se_is_team_member'), sb.from('staff_roles').select('role_code,system_code').eq('staff_id', st.id).is('ended_on', null)]);
   const rs = rl.data || [], formal = rs.some(r => r.role_code === 'core_admin' || (r.role_code === 'coordinator' && r.system_code === 'self_evaluation'));
   const role = (adm.data === true || crd.data === true) ? (rs.some(r => r.role_code === 'principal') && !formal ? 'principal' : 'coordinator') : team.data === true ? 'team_member' : null;
-  return role ? { id: st.id, uid, role, staff_id: st.id, display_name: st.full_name, is_active: true } : { denied: true, display_name: st.full_name };
+  // كل منسوب بحساب في النواة يدخل مكتبه: إن كان فريقاً أو منسقاً فدوره، وإلا «منسوب» يرى المؤشرات المسندة إليه فقط
+  return { id: st.id, uid, role: role || 'member', staff_id: st.id, display_name: st.full_name, is_active: true };
 }
 async function boot() {
   const { data: { session } } = await sb.auth.getSession();
@@ -65,7 +67,7 @@ async function boot() {
   $('#login').hidden = true; $('#shell').hidden = false;
   (App.drawWho || (() => put($('#who'), h`${me.display_name || ''} · ${L.role[me.role]}`)))();
   route();
-  seUbStart(me, role() === 'team_member' ? '#desk' : '#dashboard');
+  seUbStart(me, role() === 'team_member' || role() === 'member' ? '#desk' : '#dashboard');
   seKit(me);
   App.alerts().then(drawMenu).catch(() => {});
 }
@@ -151,7 +153,8 @@ App.indBack = () => {
 async function route(opt = {}) {
   if (!S.me) return;                                     // قبل الدخول أو لمن ليس في الفريق: لا توجيه
   noteHash();
-  const parts = location.hash.slice(1).split('/'); let name = parts[0] || (role() === 'team_member' ? 'desk' : 'dashboard'), args = parts.slice(1);
+  const parts = location.hash.slice(1).split('/'); let name = parts[0] || (role() === 'team_member' || role() === 'member' ? 'desk' : 'dashboard'), args = parts.slice(1);
+  if (role() === 'member' && !MEMBER_OK.includes(name)) { name = 'desk'; args = []; }
   if (role() === 'team_member' && (name === 'team' || name === 'platform')) name = 'desk';
   if (role() === 'team_member' && name === 'dashboard' && (!args[0] || args[0] === 'overview')) { name = 'desk'; args = []; }   // لا لوحة متابعة شاملة لعضو الفريق: مكتبه هو الأساس   // عضو الفريق: مكتبه الإلكتروني بدل إدارة الفريق والمنصة
   const m = MENU.find(x => x[0] === name);               // الصلاحية تُفحص على الاسم الأصلي قبل التحويل إلى تبويب

@@ -92,7 +92,7 @@ Pages.ind = async ([id]) => {
   const resp = ia.filter(a => a.kind === 'responsible'), evalr = ia.filter(a => a.kind === 'evaluator');
   const dResp = da.filter(a => a.kind === 'responsible'), dEval = da.filter(a => a.kind === 'evaluator');
   const iEvaluate = isCoord() || role() === 'principal' || evalr.some(a => a.staff_id === S.me.staff_id) || dEval.some(a => a.staff_id === S.me.staff_id);
-  const canUpload = role() === 'coordinator' || (role() === 'team_member' && [...ia, ...da].some(a => a.staff_id === S.me.staff_id));
+  const canUpload = role() === 'coordinator' || (['team_member', 'member'].includes(role()) && [...ia, ...da].some(a => a.staff_id === S.me.staff_id));
   const cyc = App.cycle();
   const names = l => l.length ? l.map(a => staffName(a.staff_id)).join('، ') : '—';
   // حفظ دوال المعالجة المرتبطة بهذا المؤشر
