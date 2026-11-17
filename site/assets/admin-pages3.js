@@ -1,6 +1,10 @@
 /* صفحات: الاجتماعات، الزيارات الفنية، المهام، الإعلانات، المواعيد، واتساب، التقارير، سجل النشاط */
 (() => {
 const { sb, h, raw, $, put, S, L, lab, opts, nf, dt, dtt, today, codeCmp, staffName, staffOpts, toast, run, must, ask, sure, badge, sb_, table, btn, pageHead, panel, isCoord, role, canReview, csv } = App;
+/* الحصص (حصص احجز مرفق): بديل الساعة في الاجتماعات والزيارات */
+App.PER = []; App.perReady = Promise.resolve(sb.rpc('sp_periods')).then(r => { App.PER = ((r && r.data) || []).filter(p => p.bookable); }).catch(() => {});
+App.pt = (codes, t) => { const c = (codes || []).map(k => App.PER.find(p => p.code === k)).filter(Boolean); return c.length ? (c.length > 1 ? c[0].name + ' – ' + c[c.length - 1].name : c[0].name) : (t ? String(t).slice(0, 5) : ''); };
+const perOpts = () => App.PER.map(p => [p.code, p.name]);
 /* ===== مكوّنات العرض الموحّدة لصفحات الفريق والمنصة: شريط أرقام + بطاقات صفوف ===== */
 const MON = d => new Date(String(d).slice(0, 10) + 'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { month: 'short' });
 const DAYN = d => new Date(String(d).slice(0, 10) + 'T00:00:00').getDate();
@@ -64,7 +68,7 @@ Act.tfGet = async ({ p, n }) => { const r = await sb.storage.from('se-team-files
 Act.tfDel = async ({ id, p, t, o }) => { if (!await sure('حذف المرفق؟')) return; await sb.storage.from('se-team-files').remove([p]); if (await run(sb.from('team_files').delete().eq('id', id), 'حُذف')) Act.tfOpen({ t, id: o }); };
 
 // ===== الاجتماعات =====
-const meetFields = async () => { const ref = await App.ref(); return [{ k: 'title', l: 'عنوان الاجتماع', req: 1 }, { k: 'meeting_date', l: 'التاريخ', t: 'date', req: 1 }, { k: 'start_time', l: 'الوقت', t: 'time' }, { k: 'location', l: 'المكان' },
+const meetFields = async () => { const ref = await App.ref(); await App.perReady; return [{ k: 'title', l: 'عنوان الاجتماع', req: 1 }, { k: 'meeting_date', l: 'التاريخ', t: 'date', req: 1 }, { k: 'period_codes', l: 'الحصص', t: 'multi', o: perOpts() }, { k: 'location', l: 'المكان' },
   { k: 'status', l: 'الحالة', t: 'select', req: 1, o: Object.entries(L.meet) }, { k: 'domain_id', l: 'المجال المرتبط (اختياري)', t: 'select', o: ref.domains.map(d => [d.id, d.name_ar]) }]; };
 Pages.meetings = async () => {
   const nc = App.needCycle(); if (nc) return nc;
@@ -73,7 +77,7 @@ Pages.meetings = async () => {
   const TN = { scheduled: 'info', held: 'ok', cancelled: 'mute', draft: 'warn' };
   return h`${pageHead('الاجتماعات', isCoord() ? btn('+ اجتماع', 'mtNew', {}, 'pri') : '')}${sum([[ms.length, 'كل الاجتماعات'], [up.length, 'مجدولة', 'info'], [ms.filter(m => m.status === 'held').length, 'عُقدت', 'ok'], [ms.filter(m => m.status === 'cancelled').length, 'ملغاة']])}
   ${tlist(ms.map(m => { const c = cx(m); return tile({ tone: TN[m.status], date: m.meeting_date, title: h`<a href="#meeting/${m.id}">${m.title}</a>`,
-    meta: h`<span class="bdg ${TN[m.status] === 'mute' ? '' : TN[m.status]}">${L.meet[m.status]}</span>${m.start_time ? h`<span>${App.ico('clock')} ${m.start_time.slice(0, 5)}</span>` : ''}${m.location ? h`<span>${App.ico('visit')} ${m.location}</span>` : ''}`,
+    meta: h`<span class="bdg ${TN[m.status] === 'mute' ? '' : TN[m.status]}">${L.meet[m.status]}</span>${App.pt(m.period_codes, m.start_time) ? h`<span>${App.ico('clock')} ${App.pt(m.period_codes, m.start_time)}</span>` : ''}${m.location ? h`<span>${App.ico('visit')} ${m.location}</span>` : ''}`,
     side: h`<span class="tl-k"><b>${nf(c.n)}</b><small>مدعو</small></span><span class="tl-k"><b>${nf(c.c)}</b><small>أكّد</small></span><span class="tl-k"><b>${nf(c.a)}</b><small>حضر</small></span>`, acts: h`<a class="btn sm" href="#meeting/${m.id}">فتح</a>` }); }), 'لا اجتماعات في هذه الدورة')}`;
 };
 Act.mtNew = async () => { const v = await ask('اجتماع جديد', await meetFields(), { status: 'scheduled' }); if (!v) return; const r = await run(sb.from('meetings').insert({ ...v, cycle_id: S.cid, created_by: S.me.id }).select('id').single(), 'أُنشئ الاجتماع'); if (r) location.hash = '#meeting/' + r.id; };
@@ -100,7 +104,7 @@ Pages.meeting = async ([id]) => {
   Act.ivInvite = async () => {
     if (!inv.length) return toast('أضف مدعوين أولاً', true);
     const { data, error } = await sb.rpc('create_invite_tokens', { p_meeting: id }); if (error) return toast(App.errMsg(error), true);
-    const out = []; for (const x of data) out.push(await queueWa('meeting_invite', x.staff_id, { اسم: staffName(x.staff_id), عنوان: m.title, تاريخ: dt(m.meeting_date), وقت: m.start_time?.slice(0, 5) || '', مكان: m.location || '' }, BASE() + 'rsvp.html#' + x.token));
+    const out = []; for (const x of data) out.push(await queueWa('meeting_invite', x.staff_id, { اسم: staffName(x.staff_id), عنوان: m.title, تاريخ: dt(m.meeting_date), وقت: App.pt(m.period_codes, m.start_time), مكان: m.location || '' }, BASE() + 'rsvp.html#' + x.token));
     waReport(out);
   };
   Act.mnEdit = async () => { const v = await ask('محضر الاجتماع', [{ k: 'discussion', l: 'المناقشات', t: 'textarea', rows: 8 }], mn || {}, { wide: true }); if (v && await run(sb.from('meeting_minutes').upsert({ meeting_id: id, discussion: v.discussion, status: mn?.status || 'draft' }, { onConflict: 'meeting_id' }), 'حُفظ المحضر')) App.refresh(); };
@@ -115,7 +119,7 @@ Pages.meeting = async ([id]) => {
   Act.dcDel = async ({ i }) => { if (await run(sb.from('meeting_decisions').delete().eq('id', i))) App.refresh(); };
   Act.dcTask = async ({ i }) => { const d = dc.find(x => x.id === i); await taskForm({ title: d.decision_text.slice(0, 120), description: d.decision_text, assignee_staff_id: d.responsible_staff_id, due_date: d.due_date, meeting_id: id, task_type: 'followup' }); };
   return h`${pageHead(m.title, h`${sb_('meet', m.status)} ${co ? h`${btn('تعديل', 'mtEdit')} ${btn('حذف', 'mtDel', {}, 'bad')}` : ''} ${btn('المرفقات', 'tfOpen', { t: 'meeting', id })}`)}
-  <div class="pn"><dl class="kv"><dt>التاريخ</dt><dd>${dt(m.meeting_date)} ${m.start_time ? '· ' + m.start_time.slice(0, 5) : ''}</dd><dt>المكان</dt><dd>${m.location || '—'}</dd></dl></div>
+  <div class="pn"><dl class="kv"><dt>التاريخ</dt><dd>${dt(m.meeting_date)} ${App.pt(m.period_codes, m.start_time) ? '· ' + App.pt(m.period_codes, m.start_time) : ''}</dd><dt>المكان</dt><dd>${m.location || '—'}</dd></dl></div>
   ${mine && m.status !== 'cancelled' ? panel('حضورك', h`<p>ردّك الحالي: ${sb_('rsvp', mine.rsvp)}</p>`, h`${btn('سأحضر', 'myRsvp', { i: mine.id, v: 'confirmed' }, 'pri')} ${btn('أعتذر', 'myRsvp', { i: mine.id, v: 'declined' })}`) : ''}
   ${panel('محاور الاجتماع', table([{ h: 'المحور', f: a => a.title }, { h: 'المسؤول', f: a => a.responsible_staff_id ? App.pcell(a.responsible_staff_id, 24) : '—' }, { h: 'الوقت', f: a => a.minutes_allocated ? nf(a.minutes_allocated) + ' د' : '—' }, { h: '', f: a => co ? btn('✕', 'agDel', { i: a.id }, 'bad') : '' }], ag, 'لا محاور'), co ? btn('+ محور', 'agAdd') : '')}
   ${panel('المدعوون والحضور', h`${table([{ h: 'الاسم', f: i => App.pcell(i.staff_id, 28) }, { h: 'الصفة', f: i => i.invitee_kind === 'team' ? 'فريق التقويم' : 'طرف مساند' },
@@ -129,7 +133,7 @@ Pages.meeting = async ([id]) => {
 };
 
 // ===== الزيارات الفنية =====
-const visitFields = [{ k: 'visit_date', l: 'التاريخ', t: 'date', req: 1 }, { k: 'visit_time', l: 'الوقت', t: 'time' }, { k: 'target_party', l: 'الجهة أو الشخص المستهدف', req: 1 }, { k: 'target_staff_id', l: 'المنسوب المستهدف', t: 'select', o: () => staffOpts() },
+const visitFields = [{ k: 'visit_date', l: 'التاريخ', t: 'date', req: 1 }, { k: 'period_codes', l: 'الحصص', t: 'multi', o: () => perOpts() }, { k: 'target_party', l: 'الجهة أو الشخص المستهدف', req: 1 }, { k: 'target_staff_id', l: 'المنسوب المستهدف', t: 'select', o: () => staffOpts() },
   { k: 'purpose', l: 'غرض الزيارة', t: 'textarea', rows: 3 }, { k: 'notes', l: 'ملاحظات', t: 'textarea', rows: 3 }, { k: 'status', l: 'الحالة', t: 'select', req: 1, o: Object.entries(L.visit) }];
 const vf = () => visitFields.map(f => typeof f.o === 'function' ? { ...f, o: f.o() } : f);
 Pages.visits = async () => {
@@ -190,7 +194,7 @@ Pages.visit = async ([id]) => {
     }
   };
   return h`${pageHead('زيارة فنية: ' + v.target_party, h`${sb_('visit', v.status)} ${co ? h`${btn('تعديل', 'vsEdit')} ${btn('حذف', 'vsDel', {}, 'bad')}` : ''} ${btn('المرفقات', 'tfOpen', { t: 'visit', id })}`)}
-  <div class="pn"><dl class="kv"><dt>التاريخ</dt><dd>${dt(v.visit_date)} ${v.visit_time ? '· ' + v.visit_time.slice(0, 5) : ''}</dd><dt>المنسوب المستهدف</dt><dd>${staffName(v.target_staff_id)}</dd><dt>الغرض</dt><dd class="txt">${v.purpose || '—'}</dd><dt>ملاحظات</dt><dd class="txt">${v.notes || '—'}</dd></dl>
+  <div class="pn"><dl class="kv"><dt>التاريخ</dt><dd>${dt(v.visit_date)} ${App.pt(v.period_codes, v.visit_time) ? '· ' + App.pt(v.period_codes, v.visit_time) : ''}</dd><dt>المنسوب المستهدف</dt><dd>${staffName(v.target_staff_id)}</dd><dt>الغرض</dt><dd class="txt">${v.purpose || '—'}</dd><dt>ملاحظات</dt><dd class="txt">${v.notes || '—'}</dd></dl>
    <p class="muted">لا تغيّر الزيارة تقييم المؤشر تلقائياً ولا تعتمد الشواهد؛ التقييم من اختصاص مقيّمي المؤشرات.</p></div>
   ${panel('فريق الزيارة', h`<div class="chips">${vt.length ? vt.map(t => h`<span class="chip2">${App.pcell(t.staff_id, 22)} ${co ? h`<button data-a="vsTeamDel" data-s="${t.staff_id}" aria-label="إزالة">✕</button>` : ''}</span>`) : h`<span class="muted">لا أعضاء</span>`}</div>`, co ? btn('+ عضو', 'vsTeam') : '')}
   ${panel('البطاقات الفنية للمؤشرات', cards.length ? cards.map(k => h`<div class="pn" style="box-shadow:none"><div class="pnh"><h2><a href="#ind/${k.indicator_id}" dir="ltr">${ref.im[k.indicator_id]?.code}</a> ${sb_('follow', k.followup)}</h2>

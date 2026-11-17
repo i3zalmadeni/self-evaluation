@@ -54,7 +54,7 @@ async function load() {
     soft(sb.from('evidence').select('id,indicator_id,title,status,uploaded_by,review_note,created_at,reviewed_at').eq('cycle_id', cid)),
     soft(sb.from('staff_responsibilities').select('staff_id,kind,indicator_id').eq('cycle_id', cid)),
     soft(sb.from('tasks').select('id,title,status,approval,assignee_staff_id,proposed_by,due_date,start_date,completed_at,completion_note,created_at').eq('cycle_id', cid)),
-    soft(sb.from('meetings').select('id,title,meeting_date,start_time,location,status').eq('cycle_id', cid)),
+    soft(sb.from('meetings').select('id,title,meeting_date,start_time,period_codes,location,status').eq('cycle_id', cid)),
     soft(sb.from('meeting_invitees').select('id,meeting_id,staff_id,rsvp,attended')),
     soft(sb.from('meeting_minutes').select('meeting_id,status')),
     soft(sb.from('deadlines').select('id,kind,domain_id,indicator_id,title,due_date').eq('cycle_id', cid)),
@@ -156,7 +156,7 @@ function buildAlerts(D) {
     const mm = Object.fromEntries(meetings.map(m => [m.id, m]));
     add('rsvp', 'اجتماعات تنتظر ردّك', 'cal', 'أكّد حضورك أو اعتذر.',
       inv.filter(i => i.staff_id === sid && i.rsvp === 'pending' && mm[i.meeting_id]?.status === 'scheduled' && dayDiff(mm[i.meeting_id].meeting_date) >= 0).map(i => { const m = mm[i.meeting_id], n = dayDiff(m.meeting_date);
-        return { uid: 'rv:' + i.id, tone: n <= 2 ? 'warn' : 'info', title: m.title, sub: `${dt(m.meeting_date)}${m.start_time ? ' · ' + m.start_time.slice(0, 5) : ''}${m.location ? ' · ' + m.location : ''}`,
+        return { uid: 'rv:' + i.id, tone: n <= 2 ? 'warn' : 'info', title: m.title, sub: `${dt(m.meeting_date)}${App.pt(m.period_codes, m.start_time) ? ' · ' + App.pt(m.period_codes, m.start_time) : ''}${m.location ? ' · ' + m.location : ''}`,
           acts: [{ label: 'سأحضر', a: 'dbRsvp', data: { i: i.id, v: 'confirmed' }, cls: 'pri' }, { label: 'أعتذر', a: 'dbRsvp', data: { i: i.id, v: 'declined' } }] }; }));
   }
   // ── إعلانات لم تُقرأ (لغير المنسق)
@@ -346,7 +346,7 @@ Pages.dashboard = async () => {
 
   <div class="wins3">
   ${win('w-team', 'task', 'إدارة الفريق', '#team/overview', 'فتح إدارة الفريق',
-    h`<ul class="wl"><li><span>${ico('cal')} الاجتماع القادم</span><b>${nextM ? h`<a href="#meeting/${nextM.id}">${nextM.title}</a> <small class="muted">${dt(nextM.meeting_date)}${nextM.start_time ? ' · ' + String(nextM.start_time).slice(0, 5) : ''}</small>` : h`<small class="muted">لا يوجد</small>`}</b></li>
+    h`<ul class="wl"><li><span>${ico('cal')} الاجتماع القادم</span><b>${nextM ? h`<a href="#meeting/${nextM.id}">${nextM.title}</a> <small class="muted">${dt(nextM.meeting_date)}${App.pt(nextM.period_codes, nextM.start_time) ? ' · ' + App.pt(nextM.period_codes, nextM.start_time) : ''}</small>` : h`<small class="muted">لا يوجد</small>`}</b></li>
     <li><span>${ico('visit')} الزيارة القادمة</span><b>${nextV ? h`<a href="#visit/${nextV.id}">${nextV.target_party || 'زيارة فنية'}</a> <small class="muted">${dt(nextV.visit_date)}</small>` : h`<small class="muted">لا يوجد</small>`}</b></li>
     <li><span>${ico('clip')} إجراءات زيارات مفتوحة</span><b>${nf(openCards)}</b></li></ul>
     <div class="wb"><a class="btn sm" href="#team/tasks">المهام</a><a class="btn sm" href="#team/meetings">الاجتماعات</a><a class="btn sm" href="#team/visits">الزيارات</a></div>
