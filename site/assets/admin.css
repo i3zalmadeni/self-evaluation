@@ -839,3 +839,34 @@ button.kc{font:inherit;text-align:start;cursor:pointer;width:100%} .kc.on{outlin
 .myi-none h2{margin:0 0 4px;font-size:1.1rem} .myi-none p{margin:0;color:var(--muted);line-height:1.8}
 .myi-ni{flex:none;display:grid;place-items:center;width:52px;height:52px;border-radius:16px;background:color-mix(in srgb,var(--brand) 12%,var(--surface));color:var(--brand)} .myi-ni .ico{width:26px;height:26px}
 @media (max-width:560px){.myi-none{flex-direction:column;text-align:center;padding:20px 16px}}
+
+/* ===== قائمة الجوال بنمط النواة الرقمية: زر «القائمة» + لائحة عمودية كاملة بدل شبكة الأيقونات ===== */
+.dmb{display:none}
+@media (min-width:761px) and (max-width:900px){
+  #menu{display:flex;grid-template-columns:none;flex-wrap:wrap;gap:4px}
+  #menu>a{flex-direction:row;justify-content:flex-start;gap:6px;padding:9px 12px;min-height:0;font-size:.92rem;line-height:normal;text-align:start;white-space:nowrap}
+  #menu>a .ico{width:19px;height:19px}
+  #menu>a .nb{position:static;top:auto;min-width:20px;height:20px;font-size:.74rem;padding:0 6px;margin-inline-start:6px}
+}
+@media (max-width:760px){
+  .sb{flex-wrap:wrap;gap:8px;padding-block:8px}
+  .dmb{display:inline-flex;align-items:center;gap:8px;flex:1 1 0;min-width:0;min-height:44px;padding:0 14px;border-radius:14px;font:inherit;font-weight:700;font-size:.95rem;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);cursor:pointer;text-align:start}
+  .dmb:hover,#subbar.open .dmb{background:rgba(255,255,255,.2)}
+  .dmb:focus-visible{outline:2px solid #f0b34a;outline-offset:2px}
+  .dmb .ico{width:20px;height:20px;margin:0;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .dmb-t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dmb-ch{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+  #subbar.open .dmb-ch{transform:rotate(180deg)}
+  #subbar .who{order:2;flex:none;flex-basis:auto!important;margin-inline-start:0;padding:0;border:0}
+  #subbar .ub a.ub-u{display:none}
+  #menu{order:3;flex:1 0 100%;width:100%;display:none;flex-direction:column;flex-wrap:nowrap;grid-template-columns:none;gap:2px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;max-height:calc(100dvh - 240px);padding:6px;margin-bottom:6px;border-radius:16px;background:rgba(6,30,40,.35);border:1px solid rgba(255,255,255,.14);-webkit-overflow-scrolling:touch}
+  #subbar.open #menu{display:flex;animation:dmIn .18s ease-out}
+  @keyframes dmIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  #menu>a{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;flex:none;min-height:48px;padding:10px 14px;border-radius:12px;font-size:1rem;line-height:1.5;text-align:start;white-space:normal}
+  #menu>a .ico{width:20px;height:20px;margin:0;flex:none}
+  #menu>a .nb{position:static;top:auto;margin-inline-start:auto;min-width:20px;height:20px;font-size:.74rem;padding:0 6px}
+  #menu>a.on{background:rgba(255,255,255,.16);box-shadow:inset -4px 0 0 #f0b34a}
+  #menu>a.on::after{display:none}
+  .sb .cyc{order:4;flex:1 1 100%}
+}
+@media (prefers-reduced-motion:reduce){#subbar.open #menu{animation:none}}

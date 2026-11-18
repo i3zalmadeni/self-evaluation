@@ -35,6 +35,16 @@ function drawMenu() {
 }
 App.drawMenu = drawMenu;
 
+// قائمة الجوال بنمط النواة الرقمية: زر «القائمة» يفتح لائحة عمودية بكل التبويبات (على الشاشات العريضة يبقى الشريط الأفقي)
+(() => { const d = document.getElementById('subbar'), b = document.getElementById('dmb'), m = document.getElementById('menu'); if (!d || !b || !m) return;
+  const set = (o) => { d.classList.toggle('open', o); b.setAttribute('aria-expanded', o); };
+  b.onclick = (e) => { e.stopPropagation(); set(!d.classList.contains('open')); };
+  m.addEventListener('click', (e) => { if (e.target.closest('a')) set(false); });
+  document.addEventListener('click', (e) => { if (!d.contains(e.target)) set(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && d.classList.contains('open')) { set(false); b.focus(); } });
+  matchMedia('(min-width:761px)').addEventListener('change', (q) => { if (q.matches) set(false); });
+})();
+
 // هوية المستخدم من النواة الرقمية: المنسوب بحساب الدخول، والدور من أدوار النواة وفريق التقويم
 async function loadMe(uid) {
   const { data: st } = await sb.from('staff').select('id,full_name,is_active').eq('user_id', uid).maybeSingle();
