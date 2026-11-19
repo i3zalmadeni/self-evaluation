@@ -72,7 +72,7 @@ function closeModal() { modalEl?.remove(); modalEl = null; document.body.classLi
 function modal(title, body, { wide } = {}) {
   closeModal();
   modalEl = document.createElement('div'); modalEl.className = 'ov';
-  modalEl.innerHTML = `<div class="md${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="mh"><b>${esc(title)}</b><button class="x" type="button" data-close aria-label="إغلاق">✕</button></div><div class="mb"></div></div>`;
+  modalEl.innerHTML = `<div class="md${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="mh"><b>${esc(title)}</b><button class="x" type="button" data-close aria-label="إغلاق"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="mb"></div></div>`;
   put($('.mb', modalEl), body);
   modalEl.addEventListener('mousedown', e => { if (e.target === modalEl) closeModal(); });
   modalEl.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeModal(); });
