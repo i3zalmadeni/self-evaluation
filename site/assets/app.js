@@ -46,7 +46,8 @@ async function load() {
   if (session) { role = await sb.myRole(); }
   const ll = $('#loginLink'); if (ll) ll.hidden = !session;
   const al = $('#adminLink');
-  if (al) al.setAttribute('href', session ? 'admin.html' : '#login');   // كل من سجّل دخوله يذهب إلى اللوحة، وهي تعرض لغير عضو الفريق رسالة توضيحية بدل إخراجه
+  if (al) al.setAttribute('href', session ? 'admin.html' : '#login');
+  const alt = al && al.querySelector('span'); if (alt) alt.textContent = session ? 'لوحة التحكم' : 'تسجيل الدخول';   // كل من سجّل دخوله يذهب إلى اللوحة، وهي تعرض لغير عضو الفريق رسالة توضيحية بدل إخراجه
   const lv = lvRes && lvRes.data;
   if (lv && lv.length) THR = lv.filter(x => x.min_pct != null).map(x => [x.code, +x.min_pct]).sort((a, b) => b[1] - a[1]);
   await loadOwners();
