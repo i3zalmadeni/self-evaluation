@@ -254,7 +254,7 @@ function agHtml() {
   const items = App.agendaItems ? App.agendaItems(calD) : [];
   if (CAL.sel) { const xs = items.filter(x => x.d === CAL.sel); return h`<div class="ag-h"><h3>${new Date(CAL.sel + 'T00:00:00').toLocaleDateString('ar-SA-u-ca-gregory-nu-latn', { weekday: 'long', day: 'numeric', month: 'long' })}</h3><button type="button" class="btn sm" data-a="calSel" data-d="${CAL.sel}">عرض الأسبوع القادم</button></div>${xs.length ? App.agendaFlat(xs) : h`<p class="muted empty">لا أحداث في هذا اليوم.</p>`}`; }
   const hh = App.agendaHtml(calD, 7, 8);
-  return h`<div class="ag-h"><h3>الأسبوع القادم</h3><a class="btn sm" href="${role() === 'team_member' ? '#desk/overview' : '#team/overview'}">${role() === 'team_member' ? 'مكتبي' : 'أجندة الفريق'}</a></div>${hh || h`<p class="muted empty">لا اجتماعات ولا زيارات ولا مواعيد ولا مهام خلال الأسبوع القادم.</p>`}`;
+  return h`<div class="ag-h"><h3>الأسبوع القادم</h3><a class="btn sm" href="${role() === 'team_member' ? '#desk/overview' : '#team/cal'}">${role() === 'team_member' ? 'مكتبي' : 'أجندة الفريق'}</a></div>${hh || h`<p class="muted empty">لا اجتماعات ولا زيارات ولا مواعيد ولا مهام خلال الأسبوع القادم.</p>`}`;
 }
 const calRedraw = () => { put($('#wcal'), calHtml()); put($('#wag'), agHtml()); };
 Act.calNav = ({ v }) => { let m = CAL.m + Number(v), y = CAL.y; if (m < 0) { m = 11; y--; } if (m > 11) { m = 0; y++; } CAL.m = m; CAL.y = y; put($('#wcal'), calHtml()); };
@@ -316,6 +316,12 @@ Pages.dashboard = async () => {
   const strip = D.anns.slice().sort((a, b) => (b.priority !== 'normal') - (a.priority !== 'normal'));
 
   let mapBody = ''; try { mapBody = await Pages.indmap(); } catch (e) { console.warn('map', e); }
+  // ما كان في «نظرة عامة» لإدارة الفريق وإدارة البوابة (حُذفتا): يُعرض هنا في نافذتي القسمين
+  const nMt = meetings.filter(m => m.status === 'scheduled' && dayDiff(m.meeting_date) >= 0).length, nVp = vis.filter(v => v.status === 'planned').length;
+  const nDl = (D.dls || []).filter(d => d.due_date && dayDiff(d.due_date) >= 0 && dayDiff(d.due_date) <= 14 && !d.closed).length;
+  const soft = async q => { try { const r = await q; return r.data || []; } catch { return []; } };
+  const [waSet, waMsg] = co ? await Promise.all([soft(sb.from('whatsapp_settings').select('enabled')), soft(sb.from('whatsapp_messages').select('status').eq('cycle_id', S.cid))]) : [[], []];
+  const waOn = !!waSet[0]?.enabled, waFail = waMsg.filter(m => m.status === 'failed').length;
   return h`<div class="desk3">
   ${svcBar(co, role())}
   ${strip.length ? h`<div class="db-strip" role="region" aria-label="الإعلانات">${ico('mega')}<div>${strip.slice(0, 5).map(a => h`<a href="#ann" class="${a.priority}">${a.priority !== 'normal' ? h`<b>${L.prio[a.priority]}:</b> ` : ''}${a.title}${!co && !readSet.has(a.id) ? h` <i class="db-dot" title="لم تطّلع عليه"></i>` : ''}</a>`)}</div><a class="btn sm" href="#ann">كل الإعلانات</a></div>` : ''}
@@ -346,16 +352,21 @@ Pages.dashboard = async () => {
   <details class="win w-map" open><summary><span class="db-gi">${ico('flag')}</span><h2>خريطة التقدم للمؤشرات</h2><span class="wm-s">${nf(nOk)} معتمد من ${nf(nInd)} · ${nf(nInd ? Math.round(nOk / nInd * 100) : 0)}%</span><a class="btn sm" href="#inds/map">فتح الخريطة</a><span class="wm-t" aria-hidden="true">${ico('chev')}</span></summary>${mapBody}</details>
 
   <div class="wins3">
-  ${win('w-team', 'task', 'إدارة الفريق', '#team/overview', 'فتح إدارة الفريق',
+  ${win('w-team', 'task', 'إدارة الفريق', '#team/tasks', 'فتح إدارة الفريق',
     h`<ul class="wl"><li><span>${ico('cal')} الاجتماع القادم</span><b>${nextM ? h`<a href="#meeting/${nextM.id}">${nextM.title}</a> <small class="muted">${dt(nextM.meeting_date)}${App.pt(nextM.period_codes, nextM.start_time) ? ' · ' + App.pt(nextM.period_codes, nextM.start_time) : ''}</small>` : h`<small class="muted">لا يوجد</small>`}</b></li>
     <li><span>${ico('visit')} الزيارة القادمة</span><b>${nextV ? h`<a href="#visit/${nextV.id}">${nextV.target_party || 'زيارة فنية'}</a> <small class="muted">${dt(nextV.visit_date)}</small>` : h`<small class="muted">لا يوجد</small>`}</b></li>
-    <li><span>${ico('clip')} إجراءات زيارات مفتوحة</span><b>${nf(openCards)}</b></li></ul>
+    <li><span>${ico('clip')} إجراءات زيارات مفتوحة</span><b>${nf(openCards)}</b></li>
+    <li><span>${ico('cal')} اجتماعات قادمة · زيارات مخططة</span><b><a href="#team/meetings">${nf(nMt)}</a> · <a href="#team/visits">${nf(nVp)}</a></b></li>
+    <li><span>${ico('clock')} مواعيد إغلاق خلال 14 يوماً</span><b>${nDl ? h`<a href="#team/cal">${nf(nDl)}</a>` : '0'}</b></li></ul>
     <div class="wb"><a class="btn sm" href="#team/tasks">المهام</a><a class="btn sm" href="#team/meetings">الاجتماعات</a><a class="btn sm" href="#team/visits">الزيارات</a></div>
     ${nstrip([{ ico: 'clock', label: 'قيد التنفيذ', v: Math.max(tkRun, 0), tone: 'info', href: '#team/tasks' }, { ico: 'alert', label: 'متأخرة', v: tkLate, tone: 'bad', href: '#team/tasks' }, { ico: 'note', label: co ? 'بانتظار المراجعة' : 'مقترحة', v: co ? tkRev : tkProp, tone: 'warn', href: '#team/tasks' }, { ico: 'check', label: 'مكتملة', v: tkDone, tone: 'ok', href: '#team/tasks' }])}`)}
 
-  ${win('w-plat', 'users', 'إدارة البوابة', '#platform', 'فتح إدارة البوابة',
-    h`${setup.length ? h`<h3 class="wh">يحتاج إعداداً</h3><ul class="wl">${setup.map(itemHtml)}</ul>` : h`<p class="muted empty">إعدادات المنصة مكتملة: كل المقيّمين لهم حسابات وكل المؤشرات مسندة.</p>`}
-    <div class="wb">${[['assign', 'الإسناد'], ['cycles', 'الدورات'], ['ann', 'الإعلانات'], ['wa', 'واتساب']].filter(([t]) => App.teamTabAllowed(t)).map(([t, l]) => h`<a class="btn sm" href="#platform/${t}">${l}</a>`)}</div>
+  ${win('w-plat', 'users', 'إدارة البوابة', '#platform/', 'فتح إدارة البوابة',
+    h`<ul class="wl"><li><span>${ico('layers')} الدورة الحالية</span><b>${c.name} <small class="muted">${L.cycle[c.status] || ''}${left == null ? '' : left >= 0 ? ' · متبقٍ ' + nf(left) + ' يوماً' : ' · تجاوزت نهايتها'} · ${c.results_published ? 'النتائج منشورة' : 'النتائج غير منشورة'}</small></b></li>
+    <li><span>${ico('user')} مؤشرات لها مقيّم</span><b>${nf(nInd - noEv)} <small class="muted">من ${nf(nInd)}</small></b></li>
+    ${co ? h`<li><span>${ico('bell')} واتساب</span><b>${waOn ? 'مشغّل' : 'متوقف'}${waFail ? h` · <a href="#platform/wa">${nf(waFail)} رسالة فشلت</a>` : ''}</b></li>` : ''}</ul>
+    ${setup.length ? h`<h3 class="wh">يحتاج إعداداً</h3><ul class="wl">${setup.map(itemHtml)}</ul>` : h`<p class="muted empty">إعدادات المنصة مكتملة: كل المقيّمين لهم حسابات وكل المؤشرات مسندة.</p>`}
+    <div class="wb">${[['staff', 'الأعضاء'], ['assign', 'الإسناد'], ['cycles', 'الدورات'], ['wa', 'واتساب']].filter(([t]) => App.teamTabAllowed(t)).map(([t, l]) => h`<a class="btn sm" href="#platform/${t}">${l}</a>`)}</div>
     ${nstrip([{ ico: 'users', label: 'منسوبون', v: staffAct, tone: 'info' }, ...(App.teamTabAllowed('staff') || role() === 'principal' ? [{ ico: 'user', label: 'حسابات فعّالة', v: accounts, tone: 'ok' }] : []), { ico: 'mega', label: 'إعلانات سارية', v: D.anns.length, tone: 'info', href: '#ann' }])}`)}
 
   ${win('w-rep', 'doc', 'التقارير وسجل النشاط', '#dashboard/reports', 'التقارير',

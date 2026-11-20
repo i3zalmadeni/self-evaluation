@@ -20,7 +20,7 @@ const MENU = [
   ['platform', 'إدارة البوابة', ['coordinator', 'principal']],   // الأخيرة دائماً
 ];
 // اسم الصفحة الداخلية ← القسم الذي يحويها
-const HUB_OF = { reports: 'dashboard', log: 'dashboard', evidence: 'inds', indmap: 'inds', ind: 'inds', cycles: 'platform', wa: 'platform', staff: 'platform', perms: 'platform', assign: 'platform', ann: 'platform', tasks: 'team', meetings: 'team', meeting: 'team', visits: 'team', visit: 'team', cal: 'team' };
+const HUB_OF = { reports: 'dashboard', log: 'dashboard', evidence: 'inds', indmap: 'inds', ind: 'inds', cycles: 'platform', wa: 'platform', staff: 'platform', perms: 'platform', assign: 'platform', ann: 'team', tasks: 'team', meetings: 'team', meeting: 'team', visits: 'team', visit: 'team', cal: 'team' };
 const DESKP = ['tasks', 'meetings', 'meeting', 'visits', 'visit', 'cal', 'ann'];
 const hubOf = n => role() === 'team_member' && DESKP.includes(n) ? 'desk' : HUB_OF[n];
 const MEMBER_OK = ['desk', 'ind'];   // المنسوب العادي: مكتبه وصفحة المؤشر المسند إليه فقط

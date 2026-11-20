@@ -24,8 +24,8 @@ const cnt = (A, keys) => { const s = new Set(); (A?.groups || []).filter(g => ke
 App.hubBadges = A => ({
   alerts: A?.total || 0,
   inds: cnt(A, ['evid', 'eval', 'myeval', 'myfix', 'myresp']),
-  team: cnt(A, ['tprop', 'trev', 'min', 'tlate', 'mytask', 'rsvp', 'visit', 'dl']),
-  platform: cnt(A, ['noassign', 'ann']),
+  team: cnt(A, ['tprop', 'trev', 'min', 'tlate', 'mytask', 'rsvp', 'visit', 'dl', 'ann']),
+  platform: cnt(A, ['noassign']),
   desk: cnt(A, ['mytask', 'rsvp', 'visit', 'dl', 'ann']),
 });
 
