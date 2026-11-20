@@ -27,7 +27,7 @@ const L = {
   prio: { normal: 'عادي', important: 'مهم', urgent: 'عاجل' },
   role: { coordinator: 'منسق التقويم', team_member: 'عضو فريق', member: 'منسوب', principal: 'قائد المدرسة' },
   kind: { responsible: 'مسؤول', evaluator: 'مقيّم' },
-  wa: { queued: 'في الانتظار', sent: 'أُرسلت', delivered: 'وصلت', failed: 'فشلت', skipped: 'تُجوهلت' },
+  wa: { queued: 'في الانتظار', sent: 'أُرسلت', delivered: 'وصلت', failed: 'فشلت', skipped: 'تُجوهلت', manual: 'تذكير يدوي' },
 };
 const lab = (m, k) => L[m][k] ?? k ?? '—';
 const opts = m => Object.entries(L[m]);

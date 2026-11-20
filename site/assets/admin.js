@@ -15,12 +15,12 @@ const MENU = [
   ['evidence', 'الشواهد', '*', 1], ['indmap', 'خريطة التقدم', '*', 1],
   ['cycles', 'دورات التقويم', CPR, 1], ['wa', 'واتساب', ['coordinator'], 1],
   ['staff', 'الصلاحيات', ['coordinator'], 1], ['systems', 'الأنظمة المرتبطة', '*', 1], ['assign', 'المسؤوليات', CP, 1], ['ann', 'الإعلانات', '*', 1],
-  ['meetings', 'الاجتماعات', '*', 1], ['visits', 'الزيارات الفنية', '*', 1], ['tasks', 'المهام والتكليفات', '*', 1], ['cal', 'التقويم والمواعيد', '*', 1],
+  ['meetings', 'الاجتماعات', '*', 1], ['visits', 'الزيارات الفنية', '*', 1], ['tasks', 'المهام والتكليفات', '*', 1], ['cal', 'التقويم والمواعيد', '*', 1], ['remind', 'تذكيرات واتساب', ['coordinator'], 1],
   ['perms', 'الأعضاء والصلاحيات', ['coordinator'], 1],     // انتقلت تبويباً في «إدارة البوابة» (#platform/staff)
   ['platform', 'إدارة البوابة', ['coordinator', 'principal']],   // الأخيرة دائماً
 ];
 // اسم الصفحة الداخلية ← القسم الذي يحويها
-const HUB_OF = { reports: 'dashboard', log: 'dashboard', evidence: 'inds', indmap: 'inds', ind: 'inds', cycles: 'platform', wa: 'platform', staff: 'platform', perms: 'platform', assign: 'platform', ann: 'team', tasks: 'team', meetings: 'team', meeting: 'team', visits: 'team', visit: 'team', cal: 'team' };
+const HUB_OF = { reports: 'dashboard', log: 'dashboard', evidence: 'inds', indmap: 'inds', ind: 'inds', cycles: 'platform', wa: 'platform', staff: 'platform', perms: 'platform', assign: 'platform', ann: 'team', remind: 'team', tasks: 'team', meetings: 'team', meeting: 'team', visits: 'team', visit: 'team', cal: 'team' };
 const DESKP = ['tasks', 'meetings', 'meeting', 'visits', 'visit', 'cal', 'ann'];
 const hubOf = n => role() === 'team_member' && DESKP.includes(n) ? 'desk' : HUB_OF[n];
 const MEMBER_OK = ['desk', 'ind'];   // المنسوب العادي: مكتبه وصفحة المؤشر المسند إليه فقط
