@@ -19,9 +19,12 @@ App.indFilter = o => { hm = fresh(); if (o?.st) hm.st = o.st; if (o?.mine) hm.mi
 const MST = { done: ['check', 'مكتمل', 'ok'], wait: ['clock', 'بانتظار الاعتماد', 'info'], need: ['edit', 'بحاجة إلى عمل', 'warn'] };
 const NOP2 = '__none';
 const MSORT = [['attention', 'ترتيب: الأحوج للعمل أولاً'], ['code', 'ترتيب: الرمز'], ['pct_desc', 'ترتيب: نسبة التحقق (الأعلى)'], ['pct_asc', 'ترتيب: نسبة التحقق (الأدنى)'], ['evid', 'ترتيب: الأكثر شواهد معتمدة']];
-const MGROUP = [['none', 'بدون تجميع'], ['dom', 'تجميع: المجال'], ['std', 'تجميع: المعيار'], ['st', 'تجميع: الحالة'], ['resp', 'تجميع: مسؤول المؤشر'], ['eval', 'تجميع: مقيّم المؤشر'], ['role', 'تجميع: دوري أنا']];
-const MFAC = [['dom', 'المجال', 'layers'], ['std', 'المعيار', 'doc'], ['resp', 'مسؤول المؤشر', 'users'], ['eval', 'مقيّم المؤشر', 'users'], ['role', 'دوري أنا في المؤشر', 'users'], ['lvl', 'المستوى', 'flag'], ['evd', 'الشواهد', 'clip']];
+const MGROUP = [['none', 'بدون تجميع'], ['dom', 'تجميع: المجال'], ['std', 'تجميع: المعيار'], ['st', 'تجميع: الحالة'], ['resp', 'تجميع: مسؤول المؤشر'], ['eval', 'تجميع: مقيّم المؤشر']];
+const MFAC = [['dom', 'المجال', 'layers'], ['std', 'المعيار', 'doc'], ['resp', 'مسؤول المؤشر', 'users'], ['eval', 'مقيّم المؤشر', 'users'], ['lvl', 'المستوى', 'flag'], ['evd', 'الشواهد', 'clip']];
 const MORD = ['need', 'wait', 'done'];
+/* تصنيف المؤشرات قبل الفرز: rs = مؤشرات أنا مسؤول عنها، ev = مؤشرات أقيّمها (يبقى عند إعادة الضبط) */
+const MROLE = [['rs', 'مؤشرات أنا مسؤول عنها', 'flag'], ['ev', 'مؤشرات أقيّمها', 'check']];
+let MRV = null;
 const mfresh = () => ({ q: '', st: '', sort: 'attention', group: 'none', adv: false, f: { dom: [], std: [], resp: [], eval: [], role: [], lvl: [], evd: [] }, open: { dom: true, std: false, resp: true, eval: false, role: false, lvl: false, evd: false } });
 let MF = mfresh();
 async function memberInds() {
@@ -29,12 +32,16 @@ async function memberInds() {
   const lname = Object.fromEntries((lvs || []).map(l => [l.id, l.label_ar]));
   const mine = new Map(); resp.filter(r => r.staff_id === me).forEach(r => { const o = mine.get(r.indicator_id) || { ev: false, rs: false }; o[r.kind === 'evaluator' ? 'ev' : 'rs'] = true; mine.set(r.indicator_id, o); });
   const peo = (id, kind) => { const seen = new Set(); return resp.filter(r => r.indicator_id === id && r.kind === kind && !seen.has(r.staff_id) && seen.add(r.staff_id)).map(r => ({ id: r.staff_id, name: staffName(r.staff_id) })); };
-  const rows = ref.inds.filter(i => mine.has(i.id)).map(i => {
+  const all = ref.inds.filter(i => mine.has(i.id)).map(i => {
     const o = om[i.id] || {}, st = o.eval_status || 'not_evaluated', m = mine.get(i.id), evs = D.evid.filter(e => e.indicator_id === i.id), bad = evs.filter(e => ['needs_completion', 'rejected'].includes(e.status));
     const k = st === 'approved' ? 'done' : st === 'submitted' ? 'wait' : 'need';
     const why = k !== 'need' ? '' : bad.length ? `${nf(bad.length)} شاهد يحتاج استكمالاً` : st === 'draft' ? 'التقييم مسودة لم تُرسل' : m.ev ? 'ينتظر تقييمك' : !evs.length ? 'لم تُرفع شواهد بعد' : 'استكمال المتطلبات';
     return { i, k, why, m, rsP: peo(i.id, 'responsible'), evP: peo(i.id, 'evaluator'), ea: o.approved_evidence || 0, et: o.total_evidence ?? evs.length, ep: evs.filter(e => ['new', 'under_review'].includes(e.status)).length, pct: o.achievement_pct, lvl: lname[o.level_id] || '' };
   });
+  if (!MRV || !all.some(r => r.m[MRV])) MRV = all.some(r => r.m.rs) || !all.some(r => r.m.ev) ? 'rs' : 'ev';
+  let rows = all.filter(r => r.m[MRV]);
+  const roleHtml = () => `<div class="mrole" role="group" aria-label="تصنيف المؤشرات">${MROLE.map(([k, t, ic]) => { const n = all.filter(r => r.m[k]).length;
+    return `<button type="button" class="mrb${MRV === k ? ' on' : ''}${n ? '' : ' zero'}" data-mrole="${k}" aria-pressed="${MRV === k}">${App.ico(ic).s}<span>${t}</span><em>${nf(n)}</em></button>`; }).join('')}</div>`;
   const EVD = [['approved', 'لديه شواهد معتمدة'], ['pending', 'شواهد بانتظار المراجعة'], ['none', 'بلا شواهد']];
   const fv = (r, k) => k === 'dom' ? [r.i.dom?.id] : k === 'std' ? [r.i.std?.id] : k === 'resp' ? (r.rsP.length ? r.rsP.map(x => x.name) : [NOP2]) : k === 'eval' ? (r.evP.length ? r.evP.map(x => x.name) : [NOP2]) : k === 'role' ? [...(r.m.ev ? ['ev'] : []), ...(r.m.rs ? ['rs'] : [])]
     : k === 'lvl' ? [r.lvl || NOP2] : [...(r.ea ? ['approved'] : []), ...(r.ep ? ['pending'] : []), ...(!r.et ? ['none'] : [])];
@@ -80,6 +87,8 @@ async function memberInds() {
   };
   const MST_ORD = [MST.need[1], MST.wait[1], MST.done[1]], minCode = xs => xs.map(r => r.i.code).sort(codeCmp)[0];
   const fill = v => {
+    rows = all.filter(r => r.m[MRV]);
+    v.querySelector('#mrole').innerHTML = roleHtml(); v.querySelector('#mhead').innerHTML = headHtml();
     const rs = sortRows(rows.filter(r => pass(r)));
     v.querySelector('#micount').textContent = `${nf(rs.length)} من ${nf(rows.length)} مؤشراً`;
     v.querySelector('#mpills').innerHTML = pillsHtml();
@@ -88,15 +97,17 @@ async function memberInds() {
     if (MF.adv) { const sc = [...v.querySelectorAll('.fbody')].map(e => e.scrollTop); fp.innerHTML = panelHtml(); [...v.querySelectorAll('.fbody')].forEach((e, i) => { e.scrollTop = sc[i] || 0; }); }
     v.querySelector('#mlist').innerHTML = body(rs);
   };
-  const p = rows.length ? cnt('done') / rows.length * 100 : 0;
-  return { html: h`<section class="mhead"><div><b>${nf(cnt('done'))} <span class="of">من ${nf(rows.length)}</span></b><small>مؤشراتك المكتملة</small><i><u style="width:${p}%"></u></i></div><div class="mh-k need">${App.ico('edit')}<b>${nf(cnt('need'))}</b><small>بحاجة إلى عمل</small></div><div class="mh-k wait">${App.ico('clock')}<b>${nf(cnt('wait'))}</b><small>بانتظار الاعتماد</small></div><div class="mh-k done">${App.ico('check')}<b>${nf(cnt('done'))}</b><small>مكتملة</small></div></section>
+  const headHtml = () => { const p = rows.length ? cnt('done') / rows.length * 100 : 0;
+    return h`<div><b>${nf(cnt('done'))} <span class="of">من ${nf(rows.length)}</span></b><small>${MRV === 'ev' ? 'المؤشرات التي أقيّمها المكتملة' : 'مؤشراتي المسؤول عنها المكتملة'}</small><i><u style="width:${p}%"></u></i></div><div class="mh-k need">${App.ico('edit')}<b>${nf(cnt('need'))}</b><small>بحاجة إلى عمل</small></div><div class="mh-k wait">${App.ico('clock')}<b>${nf(cnt('wait'))}</b><small>بانتظار الاعتماد</small></div><div class="mh-k done">${App.ico('check')}<b>${nf(cnt('done'))}</b><small>مكتملة</small></div>`.s; };
+  return { html: h`<div id="mrole"></div><section class="mhead" id="mhead"></section>
     <div class="fbar" id="mfbar" role="search"><label class="fsearch">${App.ico('search')}<input type="search" id="mq" placeholder="ابحث بالرمز أو النص أو المجال أو المعيار" value="${MF.q}" aria-label="بحث"></label><button type="button" class="fbtn" id="madvbtn" aria-expanded="false"></button><div class="pills2" id="mpills"></div></div>
     <div class="fpanel" id="mfpanel" hidden></div><div class="sec-h"><span class="chip" id="micount"></span></div><div id="mlist"></div>`,
     after: v => {
       fill(v);
       v.addEventListener('click', e => {
-        const t = e.target.closest('[data-mwk],[data-mst],[data-mreset],[data-mfh],#madvbtn'); if (!t || !v.contains(t)) return;
-        if (t.dataset.mwk) { e.preventDefault(); e.stopPropagation(); const a = MF.f[t.dataset.mwk], i = a.indexOf(t.dataset.mwv); i < 0 ? a.push(t.dataset.mwv) : a.splice(i, 1); }
+        const t = e.target.closest('[data-mrole],[data-mwk],[data-mst],[data-mreset],[data-mfh],#madvbtn'); if (!t || !v.contains(t)) return;
+        if (t.dataset.mrole) { if (MRV === t.dataset.mrole) return; MRV = t.dataset.mrole; MF.st = ''; ['resp', 'eval'].forEach(k => (MF.f[k] = [])); }
+        else if (t.dataset.mwk) { e.preventDefault(); e.stopPropagation(); const a = MF.f[t.dataset.mwk], i = a.indexOf(t.dataset.mwv); i < 0 ? a.push(t.dataset.mwv) : a.splice(i, 1); }
         else if (t.dataset.mst !== undefined) MF.st = t.dataset.mst;
         else if (t.dataset.mreset !== undefined) { const keep = { adv: MF.adv }; MF = Object.assign(mfresh(), keep); v.querySelector('#mq').value = ''; }
         else if (t.dataset.mfh) MF.open[t.dataset.mfh] = !MF.open[t.dataset.mfh];

@@ -870,3 +870,15 @@ button.kc{font:inherit;text-align:start;cursor:pointer;width:100%} .kc.on{outlin
   .sb .cyc{order:4;flex:1 1 100%}
 }
 @media (prefers-reduced-motion:reduce){#subbar.open #menu{animation:none}}
+
+/* عضو الفريق: تصنيف المؤشرات (مسؤول عنها / أقيّمها) قبل الفرز المتقدم */
+.mrole{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px;margin-bottom:14px;border-radius:20px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.mrb{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:8px 12px;border:0;border-radius:15px;background:transparent;color:var(--muted);font:inherit;font-weight:800;cursor:pointer;transition:background .2s,color .2s,box-shadow .2s}
+.mrb svg{width:20px;height:20px;flex:none}
+.mrb em{font-style:normal;font-size:.8rem;min-width:26px;padding:1px 8px;border-radius:99px;background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand2)}
+.mrb:hover{color:var(--brand2);background:color-mix(in srgb,var(--brand) 7%,transparent)}
+.mrb.on{background:linear-gradient(135deg,var(--brand2),var(--brand));color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--brand) 30%,transparent)}
+.mrb.on em{background:rgba(255,255,255,.22);color:#fff}
+.mrb.zero:not(.on){opacity:.6}
+.mrb:focus-visible{outline:3px solid var(--gold,#f0b34a);outline-offset:2px}
+@media(max-width:560px){.mrb{flex-direction:column;gap:2px;font-size:.84rem;min-height:64px}.mrb span{text-align:center;line-height:1.35}}
