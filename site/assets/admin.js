@@ -53,7 +53,11 @@ async function loadMe(uid) {
   const rs = rl.data || [], formal = rs.some(r => r.role_code === 'core_admin' || (r.role_code === 'coordinator' && r.system_code === 'self_evaluation'));
   const role = (adm.data === true || crd.data === true) ? (rs.some(r => r.role_code === 'principal') && !formal ? 'principal' : 'coordinator') : team.data === true ? 'team_member' : null;
   // كل منسوب بحساب في النواة يدخل مكتبه: إن كان فريقاً أو منسقاً فدوره، وإلا «منسوب» يرى المؤشرات المسندة إليه فقط
-  return { id: st.id, uid, role: role || 'member', staff_id: st.id, display_name: st.full_name, is_active: true };
+  // تبديل الدور: المنسق ومدير المدرسة يختاران بين لوحة المنسق ولوحة المعلم (مكتبي ومؤشراتي المسندة بصفتي عضواً في الفريق)
+  const r0 = role || 'member', rvCan = r0 === 'coordinator' || r0 === 'principal';
+  const rvView = window.RoleSwitch ? RoleSwitch.view('self_evaluation', uid, rvCan) : 'coord';
+  const r = rvCan && rvView === 'teacher' ? (team.data === true ? 'team_member' : 'member') : r0;
+  return { id: st.id, uid, role: r, staff_id: st.id, display_name: st.full_name, is_active: true, rv_can: rvCan, rv_view: rvView };
 }
 async function boot() {
   const { data: { session } } = await sb.auth.getSession();
@@ -79,6 +83,8 @@ async function boot() {
   route();
   seUbStart(me, role() === 'team_member' || role() === 'member' ? '#desk' : '#dashboard');
   seKit(me);
+  if (window.RoleSwitch) RoleSwitch.mount({ sys: 'self_evaluation', uid: session.user.id, can: me.rv_can, view: me.rv_view, teacherDesc: 'مكتبي والمؤشرات المسندة إليّ', coordDesc: 'المؤشرات والفريق والتقارير والإدارة',
+    onSwitch: (v) => { location.hash = v === 'coord' ? '#dashboard' : '#desk'; location.reload(); } });
   App.alerts().then(drawMenu).catch(() => {});
 }
 // صفحة من ليس عضواً في فريق التقويم: لوحة بلا قائمة ولا دورات، ورسالة واضحة بدل إخراجه من حسابه
