@@ -882,3 +882,22 @@ button.kc{font:inherit;text-align:start;cursor:pointer;width:100%} .kc.on{outlin
 .mrb.zero:not(.on){opacity:.6}
 .mrb:focus-visible{outline:3px solid var(--gold,#f0b34a);outline-offset:2px}
 @media(max-width:560px){.mrb{flex-direction:column;gap:2px;font-size:.84rem;min-height:64px}.mrb span{text-align:center;line-height:1.35}}
+
+/* ===== الهوية الموحدة للوحة التحكم (نمط النواة الرقمية، 2026-11-20) ===== */
+/* الشريط الأبيض: الدور صغيراً، وأيقونة القسم في مربع فاتح بجوار اسمه، والوصف بجواره، والدورة والتحديث يساراً */
+.pgt{padding-inline-end:18px}
+.pgt small{color:var(--brand2);font-size:.82rem;line-height:1.2}
+.pgt h1{display:flex;align-items:center;gap:10px;font-size:1.45rem;font-weight:800}
+.pgt h1 .ico{flex:none;width:34px;height:34px;padding:7px;border-radius:11px;background:var(--brandsoft);stroke:var(--brand2);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.pgd{color:var(--ink2);font-size:.95rem}
+.pgh{padding-block:12px}
+.pgx .cyc{color:var(--muted);font-size:.85rem;font-weight:600}
+.pgx .cyc select{background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:6px 10px;border-radius:10px;font-size:.85rem;max-width:230px}
+/* الشريط الفرعي الموحد: تبويبات نصية بأيقونة، وخط ذهبي تحت النشط، بلا صندوق */
+.tt{display:flex;flex-wrap:nowrap;gap:4px;overflow-x:auto;scrollbar-width:none;padding:0;margin:0 0 18px;background:none;border:0;border-bottom:1px solid var(--line);border-radius:0}
+.tt::-webkit-scrollbar{display:none}
+.tt a{padding:10px 16px;border-radius:0;color:var(--muted);font-weight:600;border-bottom:3px solid transparent;margin-bottom:-1px;transition:color .2s,border-color .2s}
+.tt a:hover{background:none;color:var(--ink)}
+.tt a.on{background:none;color:var(--brand2);box-shadow:none;border-bottom-color:var(--gold)} .tt a.on::after{display:none} .tt{justify-content:flex-start}
+.tt a .ico{width:17px;height:17px;stroke:currentColor}
+@media (max-width:700px){.tt a{padding:10px 12px}.pgt h1{font-size:1.15rem}.pgt h1 .ico{width:30px;height:30px;padding:6px}.pgx .cyc select{max-width:170px}}

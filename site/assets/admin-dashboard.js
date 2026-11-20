@@ -31,6 +31,7 @@ const IC = {
   search: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4-4"/>', reset: '<path d="M4 12a8 8 0 108-8H7M7 4L4 7l3 3"/>', list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>', grid: '<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>', chev: '<path d="M6 9l6 6 6-6"/>',
   star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>', alert: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
 };
+IC.home = '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>';
 const ico = n => raw(`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${IC[n] || ''}</svg>`);
 
 /* ===== تحميل البيانات مرة واحدة (مخزَّن 20 ثانية) ===== */

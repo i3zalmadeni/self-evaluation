@@ -8,7 +8,7 @@ const CP = ['coordinator', 'principal'], CPR = ['coordinator', 'principal'];
 // القائمة العلوية: أربعة أقسام رئيسية فقط. الصفحات الداخلية (علامة 1) تُعرض كتبويبات داخل قسمها وتبقى روابطها القديمة تعمل وصلاحياتها كما هي
 const MENU = [
   ['desk', 'مكتبي الإلكتروني', ['team_member', 'member']],      // الصفحة الأساسية لعضو الفريق
-  ['dashboard', 'مكتبي الإلكتروني', ['coordinator', 'principal']],
+  ['dashboard', 'الرئيسية', ['coordinator', 'principal']],
   ['inds', 'إدارة المؤشرات', '*'],
   ['team', 'إدارة الفريق', ['coordinator', 'principal']],
   ['reports', 'التقارير', '*', 1], ['log', 'سجل النشاط', CP, 1],
@@ -16,18 +16,19 @@ const MENU = [
   ['cycles', 'دورات التقويم', CPR, 1], ['wa', 'واتساب', ['coordinator'], 1],
   ['staff', 'الصلاحيات', ['coordinator'], 1], ['systems', 'الأنظمة المرتبطة', '*', 1], ['assign', 'المسؤوليات', CP, 1], ['ann', 'الإعلانات', '*', 1],
   ['meetings', 'الاجتماعات', '*', 1], ['visits', 'الزيارات الفنية', '*', 1], ['tasks', 'المهام والتكليفات', '*', 1], ['cal', 'التقويم والمواعيد', '*', 1],
-  ['perms', 'الصلاحيات', ['coordinator']],               // قبل الأخيرة: الأعضاء والحسابات والأدوار
+  ['perms', 'الأعضاء والصلاحيات', ['coordinator'], 1],     // انتقلت تبويباً في «إدارة البوابة» (#platform/staff)
   ['platform', 'إدارة البوابة', ['coordinator', 'principal']],   // الأخيرة دائماً
 ];
 // اسم الصفحة الداخلية ← القسم الذي يحويها
-const HUB_OF = { reports: 'dashboard', log: 'dashboard', evidence: 'inds', indmap: 'inds', ind: 'inds', cycles: 'platform', wa: 'platform', staff: 'perms', assign: 'platform', ann: 'platform', tasks: 'team', meetings: 'team', meeting: 'team', visits: 'team', visit: 'team', cal: 'team' };
+const HUB_OF = { reports: 'dashboard', log: 'dashboard', evidence: 'inds', indmap: 'inds', ind: 'inds', cycles: 'platform', wa: 'platform', staff: 'platform', perms: 'platform', assign: 'platform', ann: 'platform', tasks: 'team', meetings: 'team', meeting: 'team', visits: 'team', visit: 'team', cal: 'team' };
 const DESKP = ['tasks', 'meetings', 'meeting', 'visits', 'visit', 'cal', 'ann'];
 const hubOf = n => role() === 'team_member' && DESKP.includes(n) ? 'desk' : HUB_OF[n];
 const MEMBER_OK = ['desk', 'ind'];   // المنسوب العادي: مكتبه وصفحة المؤشر المسند إليه فقط
 const allowed = (r) => r === '*' || r.includes(role());
 
 // القائمة العلوية: عناصر قبل أول مجموعة تظهر مباشرة، وكل مجموعة تُفتح كقائمة منسدلة
-const MICON = { dashboard: 'bars', inds: 'note', team: 'users', platform: 'layers', perms: 'lock', desk: 'user' };
+const MICON = { dashboard: 'home', inds: 'note', team: 'users', platform: 'layers', desk: 'user' };
+App.MICON = MICON;
 function drawMenu() {
   const cur0 = location.hash.slice(1).split('/')[0] || (role() === 'team_member' || role() === 'member' ? 'desk' : 'dashboard'), cur = role() === 'member' ? 'desk' : role() === 'team_member' && (cur0 === 'team' || cur0 === 'platform' || cur0 === 'perms') ? 'desk' : (hubOf(cur0) || cur0);
   const nb = App.hubBadges ? App.hubBadges(App.lastAlerts) : {};
@@ -136,23 +137,29 @@ function showLogin(code = '') {
 
 /* ===== الترويسة الثابتة: اسم الصفحة وما تحويه، بنمط واحد في كل صفحات لوحة التحكم ===== */
 const DETAIL = {
-  notifications: ['مكتبي الإلكتروني', 'الإشعارات', 'ما ينتظر إجراءك ونتائج طلباتك ومستجدات النظام، بالتصميم نفسه في كل أنظمة النواة الرقمية.', 'dashboard'],
+  notifications: ['الرئيسية', 'الإشعارات', 'ما ينتظر إجراءك ونتائج طلباتك ومستجدات النظام، بالتصميم نفسه في كل أنظمة النواة الرقمية.', 'dashboard'],
   ind: ['المؤشرات', 'صفحة المؤشر', 'النص الرسمي للمؤشر ومسؤوله ومقيّمه وشواهده وتقييمه ومبرراته وزياراته ومهامه وسجل تعديلاته.', 'inds'],
   meeting: ['الاجتماعات', 'تفاصيل الاجتماع', 'المحاور والدعوات وتأكيد الحضور والحضور الفعلي والمحضر والقرارات.', 'team'],
   visit: ['الزيارات الفنية', 'تفاصيل الزيارة', 'بطاقات المؤشرات والملاحظات والتوصيات والإجراءات المطلوبة ومتابعتها.', 'team'],
 };
+// الهوية الموحدة للشريط الأبيض: الدور صغيراً، ثم أيقونة القسم واسمه، ووصف التبويب الداخلي بجواره
+const ROLE_T = { coordinator: 'منسق التقويم المدرسي', principal: 'مدير المدرسة', team_member: 'عضو فريق التقويم', member: 'منسوب', reviewer: 'مراجع' };
 function headFor(name, args) {
-  const d = DETAIL[name]; if (d) return { kick: App.HUBS?.[role() === 'team_member' && d[3] === 'team' ? 'desk' : d[3]]?.title || d[0], title: d[1], desc: d[2] };
-  const hub = App.HUBS?.[name]; if (!hub) { const m = MENU.find(x => x[0] === name); return { kick: 'مكتبي الإلكتروني', title: m?.[1] || '', desc: '' }; }
+  const kick = ROLE_T[role()] || 'التقويم المدرسي الذكي', hubKey = (n) => role() === 'member' ? 'desk' : role() === 'team_member' && ['team', 'platform', 'perms', 'dashboard'].includes(n) ? 'desk' : n;
+  const d = DETAIL[name]; if (d) { const k = hubKey(d[3]); return { kick, icon: MICON[k], title: d[1], desc: d[2] }; }
+  const hub = App.HUBS?.[name]; if (!hub) { const m = MENU.find(x => x[0] === name); return { kick, icon: MICON[name] || 'home', title: m?.[1] || '', desc: '' }; }
   const tabs = hub.tabs.filter(t => allowed(t[2])), t = tabs.find(x => x[0] === args[0]) || tabs[0];
-  return { kick: hub.title, title: t?.[1] || hub.title, desc: t?.[3] || '' };
+  return { kick, icon: MICON[name], title: hub.title, desc: t?.[3] || '', tab: tabs.length > 1 ? t?.[1] : '' };
 }
+let CYC = null;   // قائمة «الدورة» تنتقل من الشريط الداكن إلى الشريط الأبيض بجوار «تحديث»
 const hhmm = d => d.toLocaleTimeString('ar-SA-u-ca-gregory-nu-latn', { hour: 'numeric', minute: '2-digit' });
 function drawHead(hd) {
   App.head = hd || App.head; const x = App.head; if (!x) return;
-  put($('#pghead'), h`<div class="wrap pgh"><div class="pgt"><small>${x.kick}</small><h1>${x.title}</h1></div><p class="pgd">${x.desc}</p>
+  CYC = CYC || document.querySelector('label.cyc');
+  put($('#pghead'), h`<div class="wrap pgh"><div class="pgt"><small>${x.kick}</small><h1>${x.icon ? App.ico(x.icon) : ''}${x.title}</h1></div><p class="pgd">${x.desc}</p>
     <div class="pgx"><span class="lu" title="آخر تحديث للبيانات">${App.stamp ? 'حُدِّثت ' + hhmm(App.stamp) : ''}</span><button class="btn sm" type="button" data-a="refreshNow" aria-label="تحديث البيانات">${App.ICO_REFRESH}تحديث</button></div></div>`);
-  document.title = x.title + ' | لوحة التقويم المدرسي الذكي';
+  if (CYC) $('#pghead .pgx').prepend(CYC);
+  document.title = (x.tab ? x.tab + ' – ' : '') + x.title + ' | لوحة التقويم المدرسي الذكي';
 }
 App.ICO_REFRESH = raw('<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>');
 Act.refreshNow = async () => { await App.refresh(); toast('حُدِّثت البيانات'); };
@@ -182,7 +189,7 @@ async function route(opt = {}) {
   if (role() === 'team_member' && name === 'dashboard' && (!args[0] || args[0] === 'overview')) { name = 'desk'; args = []; }   // لا لوحة متابعة شاملة لعضو الفريق: مكتبه هو الأساس   // عضو الفريق: مكتبه الإلكتروني بدل إدارة الفريق والمنصة
   const m = MENU.find(x => x[0] === name);               // الصلاحية تُفحص على الاسم الأصلي قبل التحويل إلى تبويب
   const hub = hubOf(name);
-  if (!['ind', 'meeting', 'visit'].includes(name) && hub && Pages[hub] && (!m || allowed(m[2]))) { args = [name === 'indmap' ? 'map' : name, ...args]; name = hub; }
+  if (!['ind', 'meeting', 'visit'].includes(name) && hub && Pages[hub] && (!m || allowed(m[2]))) { args = [name === 'indmap' ? 'map' : name === 'perms' ? 'staff' : name, ...args]; name = hub; }
   const my = opt.silent ? seq : ++seq, view = $('#view'), keep = !!opt.keep, key = name + '/' + (args[0] || '');
   const sameHub = curKey && curKey.split('/')[0] === name;
   drawMenu(); if (!opt.silent) drawHead(headFor(name, args));

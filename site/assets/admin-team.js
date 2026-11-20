@@ -11,16 +11,14 @@ const dayDiff = s => Math.round((new Date(String(s).slice(0, 10) + 'T00:00:00') 
 const pctOf = (a, b) => b ? Math.round(a / b * 100) : 0;
 const CO = ['coordinator'], CP = ['coordinator', 'principal'], CPR = ['coordinator', 'principal', 'reviewer'];
 const TABS = [['overview', 'نظرة عامة', '*', 'ما يتطلب قراراً أو تنفيذاً من الفريق الآن: الأجندة القادمة ولوحة المهام والزيارات.'], ['tasks', 'المهام والتكليفات', '*', 'اقتراح المهام واعتمادها وتكليف الأعضاء ومتابعة التنفيذ وإغلاقها.'], ['meetings', 'الاجتماعات', '*', 'جدولة الاجتماعات والدعوات وتأكيد الحضور والحضور الفعلي والمحاضر والقرارات.'], ['visits', 'الزيارات الفنية', '*', 'زيارات المؤشرات وبطاقاتها الفنية والتوصيات ومتابعة الإجراءات التحسينية.'], ['cal', 'المواعيد والتقويم', '*', 'تقويم موحّد للاجتماعات والمهام والمواعيد النهائية لإغلاق المجالات والمؤشرات.']];
-const PLAT = [['overview', 'نظرة عامة', '*', 'صورة واحدة لكل ما في إدارة البوابة: الإسناد، الإعلانات، الدورات، وواتساب، وما يحتاج إجراءً منها.'], ['assign', 'الإسناد والمسؤوليات', CP, 'إسناد المجالات والمؤشرات للمسؤولين والمقيّمين وملف مسؤوليات كل شخص.'], ['ann', 'الإعلانات', '*', 'إعلانات الفريق ودرجة أهميتها والمستلمون ومن اطّلع عليها.'], ['cycles', 'دورات التقويم', CPR, 'إنشاء الدورات وإطلاقها وإيقافها وإغلاقها مع حفظ سجلّ الدورات السابقة.'], ['wa', 'واتساب', CO, 'إعدادات الإشعارات وقوالب الرسائل وسجل الإرسال ونجاحه أو فشله.']];
+const PLAT = [['overview', 'نظرة عامة', '*', 'صورة واحدة لكل ما في إدارة البوابة: الأعضاء، الإسناد، الإعلانات، الدورات، وواتساب، وما يحتاج إجراءً منها.'], ['staff', 'الأعضاء والصلاحيات', CO, 'منسوبو المدرسة وحسابات الدخول والأدوار وبيانات التواصل.'], ['assign', 'الإسناد والمسؤوليات', CP, 'إسناد المجالات والمؤشرات للمسؤولين والمقيّمين وملف مسؤوليات كل شخص.'], ['ann', 'الإعلانات', '*', 'إعلانات الفريق ودرجة أهميتها والمستلمون ومن اطّلع عليها.'], ['cycles', 'دورات التقويم', CPR, 'إنشاء الدورات وإطلاقها وإيقافها وإغلاقها مع حفظ سجلّ الدورات السابقة.'], ['wa', 'واتساب', CO, 'إعدادات الإشعارات وقوالب الرسائل وسجل الإرسال ونجاحه أو فشله.']];
 const ok = r => r === '*' || r.includes(role());
 App.TEAM_TABS = TABS.map(t => t[0]).filter(t => t !== 'overview');
 App.PLATFORM_TABS = PLAT.map(t => t[0]).filter(t => t !== 'overview');
 (App.HUBS ||= {}).team = { title: 'إدارة الفريق', tabs: TABS }; App.HUBS.platform = { title: 'إدارة البوابة', tabs: PLAT };
-// الصلاحيات: صفحة مستقلة قبل «إدارة البوابة» (الأعضاء والحسابات والأدوار)
-const PERMS = [['staff', 'الأعضاء والحسابات والأدوار', CO, 'منسوبو المدرسة وحسابات الدخول والأدوار وبيانات التواصل.']];
-App.HUBS.perms = { title: 'الصلاحيات', tabs: PERMS };
-const tabHref = t => t === 'staff' ? '#perms' : '#platform/' + t;
-App.teamTabAllowed = t => { const x = [...TABS, ...PLAT, ...PERMS].find(y => y[0] === t); return !x || ok(x[2]); };
+// الأعضاء والصلاحيات: تبويب داخل «إدارة البوابة» (كانت قسماً مستقلاً #perms، ورابطه يحوّل إلى هنا)
+const tabHref = t => '#platform/' + t;
+App.teamTabAllowed = t => { const x = [...TABS, ...PLAT].find(y => y[0] === t); return !x || ok(x[2]); };
 
 /* ===== فحوص الجاهزية: كل بند محسوب من بيانات حقيقية ===== */
 function readiness(D) {
@@ -183,7 +181,7 @@ async function platOverview() {
   const sent = waMsgs.filter(m => ['sent', 'delivered'].includes(m.status)).length, queued = waMsgs.filter(m => m.status === 'queued').length, failed = waMsgs.filter(m => m.status === 'failed').length;
   return h`${App.tlSum([[active.length, 'منسوباً على رأس العمل'], [accs.filter(p => p.is_active).length, 'حسابات فعّالة', 'info'], [hasEv.size, 'مؤشر له مقيّم من ' + nf(n), hasEv.size === n ? 'ok' : 'warn'], [issues.length, 'ملاحظات جاهزية', issues.length ? 'bad' : 'ok']])}
   <div class="wins d3 desk3">
-  ${canSee ? win('t-task', 'users', 'الأعضاء والحسابات', '#perms', 'إدارة الأعضاء', h`<div class="pv-b">${row('على رأس العمل', active.length, staff.length)}${row('لديهم حساب دخول', active.filter(x => accSet.has(x.id)).length, active.length, 'info')}${row('يصله واتساب (جوال وموافقة)', active.filter(x => x.phone && x.whatsapp_opt_in).length, active.length)}
+  ${canSee ? win('t-task', 'users', 'الأعضاء والصلاحيات', '#platform/staff', 'إدارة الأعضاء', h`<div class="pv-b">${row('على رأس العمل', active.length, staff.length)}${row('لديهم حساب دخول', active.filter(x => accSet.has(x.id)).length, active.length, 'info')}${row('يصله واتساب (جوال وموافقة)', active.filter(x => x.phone && x.whatsapp_opt_in).length, active.length)}
     <p class="muted">${nf(ext.length)} حساب مقيّم خارجي</p>${issues.filter(r => ['evnoacc', 'wa', 'inactive'].includes(r.key)).slice(0, 3).map(r => h`<a class="pv-i" href="${tabHref(r.tab)}">${App.ico('alert')} ${r.label} <b>${nf(r.items.length)}</b></a>`)}</div>`) : ''}
   ${canSee ? win('t-ind', 'user', 'الإسناد والمسؤوليات', '#platform/assign', 'إدارة الإسناد', h`<div class="pv-b">${row('مؤشرات لها مقيّم', hasEv.size, n, 'ok')}${row('مؤشرات لها مسؤول', hasRs.size, n, 'ok')}${row('مجالات مُسنَدة', D.ref.domains.filter(d => D.resp.some(r => D.ref.im[r.indicator_id]?.dom?.id === d.id)).length, D.ref.domains.length)}
     ${issues.filter(r => ['noev', 'nors', 'idle'].includes(r.key)).slice(0, 3).map(r => h`<a class="pv-i" href="${tabHref(r.tab)}">${App.ico('alert')} ${r.label} <b>${nf(r.items.length)}</b></a>`)}${!issues.some(r => ['noev', 'nors'].includes(r.key)) ? h`<p class="pv-ok">${App.ico('check')} كل المؤشرات لها مسؤول ومقيّم.</p>` : ''}</div>`) : ''}
@@ -194,23 +192,19 @@ async function platOverview() {
   </div>`;
 }
 Pages.team = async (parts) => {
-  if (parts[0] === 'staff') { location.replace('#perms'); return ''; }
+  if (parts[0] === 'staff') { location.replace('#platform/staff'); return ''; }
   if (App.PLATFORM_TABS.includes(parts[0])) return Pages.platform(parts);       // روابط قديمة (#team/assign…) تُحوَّل إلى إدارة البوابة
   const tab = TABS.some(t => t[0] === parts[0]) ? parts[0] : 'overview', sub = parts.slice(1), tabs = TABS.filter(t => ok(t[2]));
   const [r, bg] = await Promise.all([tab === 'overview' ? overview() : Pages[tab](sub), S.cid ? badges() : {}]);
   return shell('إدارة الفريق', 'متابعة المهام والاجتماعات والزيارات والمواعيد', 'team', tabs, tab, bg, '', r?.html || r, r?.after);
 };
 Pages.platform = async (parts) => {
-  if (parts[0] === 'staff') { location.replace('#perms'); return ''; }   // الأعضاء والحسابات انتقلت إلى «الصلاحيات»
   const tabs = PLAT.filter(t => ok(t[2])), tab = tabs.some(t => t[0] === parts[0]) ? parts[0] : tabs[0]?.[0];
   if (!tab) return h`<div class="pn"><p>هذه الصفحة غير متاحة لدورك.</p></div>`;
   const canSee = isCoord() || role() === 'principal';
   const [r, bg, D] = await Promise.all([tab === 'overview' ? platOverview() : Pages[tab](parts.slice(1)), S.cid ? platBadges() : {}, canSee && S.cid ? App.data().catch(() => null) : null]);
   return shell('إدارة البوابة', 'الإسناد والإعلانات ودورات التقويم وواتساب', 'platform', tabs, tab, bg, D ? readinessPanel(D) : '', r?.html || r, r?.after);
 };
-Pages.perms = async (parts) => {
-  if (!isCoord()) return h`<div class="pn"><p>هذه الصفحة غير متاحة لدورك.</p></div>`;
-  const r = await Pages.staff(parts[0] === 'staff' ? parts.slice(1) : parts);
-  return { html: h`<div class="tbody">${r?.html || r}</div>`, after: r?.after };
-};
+// الرابط القديم #perms ← تبويب «الأعضاء والصلاحيات» في إدارة البوابة
+Pages.perms = async (parts) => { location.replace('#platform/staff' + (parts[0] && parts[0] !== 'staff' ? '/' + parts.join('/') : parts.length > 1 ? '/' + parts.slice(1).join('/') : '')); return ''; };
 })();
